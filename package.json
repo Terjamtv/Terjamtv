@@ -1,0 +1,9 @@
+{
+  "name": "terjamtv",
+  "version": "1.0.0",
+  "description": "TerjamTV - Smart TV Real-time Translation Platform",
+  "private": true,
+  "scripts": {
+    "build": "echo 'Static build completed successfully'"
+  }
+}
