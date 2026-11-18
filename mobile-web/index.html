@@ -223,8 +223,23 @@
       <span>🎙️</span>
       <span>الترجمة الصوتية المباشرة للتلفزيون</span>
     </div>
+
+    <!-- Language Selector Dropdown -->
+    <div style="margin-bottom: 14px; background: #0b1120; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+      <label style="font-size: 13px; color: var(--text-muted); font-weight: 700;">لغة حوار التلفزيون:</label>
+      <select id="sourceLangSelect" onchange="onLanguageChanged()" style="background: #1e293b; color: #fff; border: 1px solid var(--border); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 13px; outline: none;">
+        <option value="en" selected>🇬🇧 الإنجليزية (English)</option>
+        <option value="tr">🇹🇷 التركية (Turkish - مسلسلات)</option>
+        <option value="ko">🇰🇷 الكورية (Korean - K-Drama)</option>
+        <option value="es">🇪🇸 الإسبانية (Spanish)</option>
+        <option value="fr">🇫🇷 الفرنسية (French)</option>
+        <option value="de">🇩🇪 الألمانية (German)</option>
+        <option value="ja">🇯🇵 اليابانية (Japanese - أنمي)</option>
+      </select>
+    </div>
+
     <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
-      اضغط الزر ودع هاتفك يستمع للكلام الإنجليزي الصادر من التلفزيون ليترجمه مباشرة باللغة العربية على الشاشة!
+      اضغط الزر ودع هاتفك يستمع للكلام الصادر من التلفزيون ليترجمه مباشرة باللغة العربية على الشاشة!
     </p>
 
     <button id="btnToggleSpeech" class="btn-action" onclick="toggleSpeechRecognition()">
@@ -288,6 +303,29 @@
 
     let isListening = false;
     let recognition = null;
+    let currentSourceLang = "en";
+
+    const LANG_MAP = {
+      en: "en-US",
+      tr: "tr-TR",
+      ko: "ko-KR",
+      es: "es-ES",
+      fr: "fr-FR",
+      de: "de-DE",
+      ja: "ja-JP"
+    };
+
+    function onLanguageChanged() {
+      const select = document.getElementById("sourceLangSelect");
+      currentSourceLang = select.value;
+      if (recognition) {
+        recognition.lang = LANG_MAP[currentSourceLang] || "en-US";
+        if (isListening) {
+          recognition.stop();
+          setTimeout(() => { try { recognition.start(); } catch(e){} }, 300);
+        }
+      }
+    }
 
     window.addEventListener("DOMContentLoaded", () => {
       if (deviceId) {
@@ -332,7 +370,7 @@
               },
               body: JSON.stringify({
                 text: englishSentence,
-                source_lang: "en",
+                source_lang: currentSourceLang,
                 target_lang: "ar",
                 device_id: deviceId
               })
