@@ -262,7 +262,31 @@
 </head>
 <body>
 
-  <div class="container">
+  <!-- Login Gate Screen (Shown by default) -->
+  <div id="loginGate" style="min-height: 85vh; display: flex; align-items: center; justify-content: center;">
+    <div style="background: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 40px; width: 100%; max-width: 440px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.6);">
+      <div style="font-size: 54px; margin-bottom: 16px;">🔐</div>
+      <h2 style="font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 8px;">لوحة تحكم المشرف</h2>
+      <p style="font-size: 13px; color: #94a3b8; margin-bottom: 24px;">هذه الصفحة محمية ومخصصة لمدير النظام فقط. أدخل الرمز السري للمتابعة:</p>
+      
+      <div style="margin-bottom: 18px;">
+        <input type="password" id="gatePassword" placeholder="اكتب الرمز السري للإدارة..." 
+          style="width: 100%; padding: 14px; background: #0f172a; border: 1px solid #3b82f6; border-radius: 10px; color: #fff; font-size: 15px; text-align: center; outline: none; letter-spacing: 2px;"
+          onkeydown="if(event.key==='Enter') attemptAdminLogin()">
+      </div>
+      
+      <button onclick="attemptAdminLogin()" class="btn" style="width: 100%; padding: 14px; font-size: 15px; font-weight: 800; border-radius: 10px; background: #2563eb; cursor: pointer;">
+        دخول لوحة التحكم 🚀
+      </button>
+      
+      <div id="loginErrorMsg" style="display: none; margin-top: 14px; color: #ef4444; font-size: 13px; font-weight: 700;">
+        ❌ الرمز السري غير صحيح! تم رفض الوصول.
+      </div>
+    </div>
+  </div>
+
+  <!-- Protected Admin Dashboard (Hidden until password verified) -->
+  <div class="container" id="adminDashboard" style="display: none;">
     <header>
       <div class="brand">
         <div class="brand-icon">📺</div>
@@ -272,10 +296,11 @@
         </div>
       </div>
 
-      <div class="server-config">
-        <input type="text" id="apiEndpoint" placeholder="رابط الـ API" value="http://localhost:8787">
-        <input type="password" id="adminSecret" placeholder="Admin Secret Key" value="translatetv-admin-secret-2026">
-        <button class="btn" onclick="fetchUsers()">تحديث</button>
+      <div class="server-config" style="gap: 12px;">
+        <input type="hidden" id="apiEndpoint" value="">
+        <input type="hidden" id="adminSecret" value="">
+        <span style="font-size: 12px; color: #4ade80; font-weight: 700;">🟢 وضع الإدارة نشط</span>
+        <button class="btn btn-secondary" onclick="adminLogout()" style="background: #334155; font-size: 12px; padding: 6px 14px;">تسجيل الخروج 🚪</button>
       </div>
     </header>
 
@@ -431,10 +456,67 @@
   <script>
     let usersList = [];
     let currentSelectedUserId = null;
+    let currentAdminSecret = sessionStorage.getItem("terjamtv_admin_key") || "";
+
+    const DEFAULT_API_BASE = (window.location.protocol.startsWith("http") && window.location.port === "8787")
+      ? "http://localhost:8787"
+      : "https://translatetv-api.honda-druid.workers.dev";
+
+    window.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("apiEndpoint").value = DEFAULT_API_BASE;
+      if (currentAdminSecret) {
+        verifyAndUnlock(currentAdminSecret);
+      }
+    });
+
+    async function attemptAdminLogin() {
+      const secret = document.getElementById("gatePassword").value.trim();
+      const errEl = document.getElementById("loginErrorMsg");
+      errEl.style.display = "none";
+
+      if (!secret) {
+        alert("يرجى إدخال الرمز السري");
+        return;
+      }
+      await verifyAndUnlock(secret);
+    }
+
+    async function verifyAndUnlock(secret) {
+      const api = document.getElementById("apiEndpoint").value || DEFAULT_API_BASE;
+      const errEl = document.getElementById("loginErrorMsg");
+
+      try {
+        const res = await fetch(`${api}/api/admin/users`, {
+          headers: { "X-Admin-Secret": secret }
+        });
+
+        if (res.ok) {
+          currentAdminSecret = secret;
+          sessionStorage.setItem("terjamtv_admin_key", secret);
+          document.getElementById("adminSecret").value = secret;
+          document.getElementById("loginGate").style.display = "none";
+          document.getElementById("adminDashboard").style.display = "block";
+          const data = await res.json();
+          usersList = data.users || [];
+          renderUsers(usersList);
+          updateStats(usersList);
+        } else {
+          if (errEl) errEl.style.display = "block";
+        }
+      } catch (e) {
+        if (errEl) errEl.style.display = "block";
+      }
+    }
+
+    function adminLogout() {
+      sessionStorage.removeItem("terjamtv_admin_key");
+      currentAdminSecret = "";
+      location.reload();
+    }
 
     async function fetchUsers() {
-      const api = document.getElementById("apiEndpoint").value.trim();
-      const secret = document.getElementById("adminSecret").value.trim();
+      const api = document.getElementById("apiEndpoint").value.trim() || DEFAULT_API_BASE;
+      const secret = document.getElementById("adminSecret").value.trim() || currentAdminSecret;
       const tbody = document.getElementById("usersTableBody");
 
       try {
