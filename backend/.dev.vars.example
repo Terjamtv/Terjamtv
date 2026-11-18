@@ -1,0 +1,7 @@
+# TranslateTV Backend Environment Variables
+# Copy this file to .dev.vars for local development
+
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_ANON_KEY=your-anon-public-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-secret-key
+ADMIN_SECRET_KEY=translatetv-admin-secret-2026

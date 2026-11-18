@@ -1,0 +1,20 @@
+{
+  "name": "translatetv-backend",
+  "version": "1.0.0",
+  "description": "TranslateTV — SaaS Backend API (Cloudflare Workers)",
+  "private": true,
+  "scripts": {
+    "dev": "cf dev",
+    "deploy": "cf deploy",
+    "build": "cf build",
+    "test": "node test-api.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.0",
+    "hono": "^4.7.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250115.0",
+    "typescript": "^5.7.0"
+  }
+}

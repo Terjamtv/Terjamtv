@@ -1,0 +1,73 @@
+name: TranslateTV CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test-and-package:
+    name: Test Backend & Package webOS IPK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Verify TypeScript Compilation
+        working-directory: ./backend
+        run: npx tsc --noEmit
+
+      - name: Build LG webOS .ipk Package
+        run: python tools/build_ipk.py
+
+      - name: Upload webOS IPK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: com.translatetv.app_1.0.0_all.ipk
+          path: ./com.translatetv.app_1.0.0_all.ipk
+
+  deploy-cloudflare:
+    name: Deploy to Cloudflare Workers
+    needs: test-and-package
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Deploy to Cloudflare Workers
+        working-directory: ./backend
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -n "$CLOUDFLARE_API_TOKEN" ]; then
+            npx wrangler deploy
+          else
+            echo "CLOUDFLARE_API_TOKEN secret not set, skipping remote deploy."
+          fi

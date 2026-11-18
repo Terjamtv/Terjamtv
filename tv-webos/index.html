@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>TranslateTV — LG webOS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Screen 1: Pairing Screen (QR Code) -->
+  <div id="screenPairing" class="screen active">
+    <div class="pairing-container">
+      <div class="tv-header">
+        <div class="logo">📺 TranslateTV</div>
+        <div class="badge">LG webOS Edition</div>
+      </div>
+
+      <div class="pairing-content">
+        <div class="qr-box">
+          <div id="qrCodeContainer" class="qr-canvas">
+            <!-- QR code rendered here -->
+            <div class="loading-spinner"></div>
+          </div>
+          <div class="pairing-code" id="pairingCodeDisplay">------</div>
+        </div>
+
+        <div class="instructions">
+          <h2>ابدأ الترجمة الفورية في ثوانٍ</h2>
+          <ol>
+            <li>افتح تطبيق <strong>TranslateTV</strong> على هاتفك المحمول.</li>
+            <li>امسح رمز <strong>QR Code</strong> أو أدخل الرمز الظاهر أعلاه.</li>
+            <li>سيتم تفعيل الترجمة الفورية تلقائياً على هذه الشاشة!</li>
+          </ol>
+
+          <div class="status-indicator">
+            <span class="dot pulse"></span>
+            <span id="pairingStatusText">في انتظار مسح الكود من الهاتف...</span>
+          </div>
+
+          <div class="config-bar">
+            <span>الخادم: <strong id="serverHostDisplay">http://localhost:8787</strong></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 2: Active Live Translation Mode -->
+  <div id="screenTranslation" class="screen">
+    <!-- Top Status Bar (auto-hides after 5s) -->
+    <div id="topBar" class="top-bar">
+      <div class="user-info">
+        <span class="icon">👤</span>
+        <span id="connectedUserName">المستخدم</span>
+        <span class="tier-pill" id="connectedTier">PRO</span>
+      </div>
+      <div class="system-status">
+        <span class="dot live"></span>
+        <span>بث الترجمة نشط (EN → AR)</span>
+      </div>
+    </div>
+
+    <!-- Active Media or Standby Visualizer -->
+    <div class="canvas-area">
+      <div class="hint-message" id="hintMessage">
+        <p>جاهز لاستقبال الترجمة من الهاتف أو المشغل</p>
+        <small>اضغط على زر (OK) في الريموت لفتح الإعدادات</small>
+      </div>
+    </div>
+
+    <!-- Live Subtitle Overlay Banner -->
+    <div class="subtitle-overlay" id="subtitleOverlay">
+      <div class="original-text" id="originalText">Welcome to the real-time translation experience</div>
+      <div class="translated-text" id="translatedText">مرحباً بك في تجربة الترجمة الفورية الحية</div>
+    </div>
+
+    <!-- Remote Control Settings Menu (D-Pad navigable) -->
+    <div id="settingsMenu" class="settings-modal" style="display: none;">
+      <h3>إعدادات شريط الترجمة</h3>
+      <div class="setting-item">
+        <span>حجم الخط:</span>
+        <button class="nav-btn" onclick="changeFontSize(-4)">-</button>
+        <span id="fontSizeDisplay">36px</span>
+        <button class="nav-btn" onclick="changeFontSize(4)">+</button>
+      </div>
+      <div class="setting-item">
+        <span>موضع النص:</span>
+        <button class="nav-btn" onclick="togglePosition()">أسفل / أعلى</button>
+      </div>
+      <div class="setting-item">
+        <button class="nav-btn" style="background: #0284c7;" onclick="switchToPlayerMode()">🎬 تشغيل فيديو تجريبي (مشغل الشاشة)</button>
+      </div>
+      <div class="setting-item">
+        <button class="nav-btn btn-danger" onclick="disconnectDevice()">قطع الاتصال بالهاتف</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 3: Integrated Video & Stream Player -->
+  <div id="screenPlayer" class="screen">
+    <video id="tvVideoPlayer" class="video-player" playsinline controls>
+      <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4" type="video/mp4">
+    </video>
+
+    <!-- Subtitle overlay inside player -->
+    <div class="player-subtitle-overlay" id="playerSubtitle">
+      <div class="player-ar" id="playerArText">الترجمة الفورية نشطة فوق الفيديو</div>
+    </div>
+
+    <div class="player-controls-banner">
+      <button class="nav-btn" onclick="switchBackToOverlayMode()">🔙 العودة لوضع البث الحصري</button>
+      <span style="font-size: 18px; color: #cbd5e1;">اضغط (OK) للتشغيل / الإيقاف المؤقت</span>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

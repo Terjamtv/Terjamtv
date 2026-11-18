@@ -1,0 +1,27 @@
+# Environment variables & secrets
+.dev.vars
+.env
+*.local
+
+# Node.js
+node_modules/
+dist/
+npm-debug.log*
+
+# Android & Gradle
+.gradle/
+build/
+*.apk
+*.aab
+local.properties
+
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

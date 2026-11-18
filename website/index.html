@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TranslateTV — ترجمة فورية لشاشة تلفزيونك للعربية</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --primary-glow: rgba(59, 130, 246, 0.4);
+      --bg: #090d16;
+      --card-bg: #111827;
+      --card-border: #1f2937;
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+      --success: #10b981;
+      --gold: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Cairo', sans-serif;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Navbar */
+    nav {
+      padding: 24px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .logo {
+      font-size: 26px;
+      font-weight: 900;
+      color: #60a5fa;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 15px;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+    }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      text-decoration: none;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn:hover {
+      background: var(--primary-hover);
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+
+    .btn-whatsapp {
+      background: #25d366;
+      color: #000;
+      font-weight: 800;
+    }
+
+    .btn-whatsapp:hover {
+      background: #22c55e;
+      box-shadow: 0 0 20px rgba(37, 211, 102, 0.4);
+    }
+
+    /* Hero */
+    .hero {
+      padding: 80px 0 60px;
+      text-align: center;
+      position: relative;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 6px 18px;
+      border-radius: 999px;
+      color: #93c5fd;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-size: 52px;
+      font-weight: 900;
+      line-height: 1.25;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, #ffffff 0%, #93c5fd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 20px;
+      color: var(--text-muted);
+      max-width: 720px;
+      margin: 0 auto 36px;
+    }
+
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 60px;
+    }
+
+    /* TV Mockup */
+    .tv-mockup-wrapper {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #000;
+      border: 12px solid #1f2937;
+      border-radius: 24px;
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9), 0 0 50px rgba(59, 130, 246, 0.2);
+      overflow: hidden;
+      position: relative;
+      aspect-ratio: 16 / 9;
+      background: radial-gradient(circle at center, #1e293b 0%, #0a0f1d 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 30px;
+    }
+
+    .tv-scene-content {
+      color: #94a3b8;
+      font-size: 20px;
+      text-align: right;
+    }
+
+    .tv-overlay-sample {
+      background: rgba(10, 15, 29, 0.88);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      padding: 16px 28px;
+      text-align: center;
+    }
+
+    .tv-overlay-sample .en {
+      font-size: 16px;
+      color: #94a3b8;
+      direction: ltr;
+      margin-bottom: 4px;
+    }
+
+    .tv-overlay-sample .ar {
+      font-size: 26px;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    /* Steps */
+    .section-title {
+      text-align: center;
+      margin: 100px 0 60px;
+    }
+
+    .section-title h2 {
+      font-size: 38px;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+
+    .section-title p {
+      color: var(--text-muted);
+      font-size: 18px;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .step-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 36px 28px;
+      text-align: center;
+      position: relative;
+    }
+
+    .step-num {
+      width: 48px;
+      height: 48px;
+      background: #1e3a8a;
+      color: #60a5fa;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 900;
+      margin: 0 auto 20px;
+    }
+
+    .step-card h3 {
+      font-size: 20px;
+      margin-bottom: 12px;
+      font-weight: 800;
+    }
+
+    .step-card p {
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+
+    /* Pricing */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-top: 40px;
+    }
+
+    .pricing-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    .pricing-card.featured {
+      border-color: #3b82f6;
+      box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
+    }
+
+    .pricing-badge {
+      position: absolute;
+      top: -12px;
+      right: 24px;
+      background: #3b82f6;
+      color: white;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 999px;
+    }
+
+    .tier-name {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .tier-price {
+      font-size: 38px;
+      font-weight: 900;
+      margin-bottom: 20px;
+    }
+
+    .tier-price span {
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .tier-features {
+      list-style: none;
+      margin-bottom: 30px;
+    }
+
+    .tier-features li {
+      font-size: 14px;
+      color: #d1d5db;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tier-features li::before {
+      content: "✓";
+      color: var(--success);
+      font-weight: 900;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--card-border);
+      padding: 50px 0;
+      margin-top: 120px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 900px) {
+      .steps-grid, .pricing-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero h1 { font-size: 36px; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <div class="container">
+    <nav>
+      <a href="#" class="logo">
+        <span>📺</span>
+        <span>TranslateTV</span>
+      </a>
+      <div class="nav-links">
+        <a href="#how-it-works">كيف يعمل؟</a>
+        <a href="#platforms">الأنظمة المدعومة</a>
+        <a href="#pricing">الباقات والأسعار</a>
+        <a href="https://wa.me/?text=مرحباً،%20أريد%20الاستفسار%20عن%20خدمة%20ترجمة%20التلفزيون%20TranslateTV" class="btn btn-whatsapp" target="_blank">
+          💬 تواصل معنا واتساب
+        </a>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Hero Section -->
+  <section class="hero container">
+    <div class="badge-pill">
+      <span>✨</span>
+      <span>يعمل بالذكاء الاصطناعي — متوافق مع LG webOS & Android TV</span>
+    </div>
+
+    <h1>ترجمة فورية لشاشة تلفزيونك للعربية<br>بمسحة QR واحدة من هاتفك</h1>
+
+    <p>
+      شاهد أفلامك، مسلسلاتك، وألعابك المفضلة بالترجمة العربية الفورية. بدون أسلاك أو أجهزة معقدة — فقط وجّه هاتفك للتلفزيون واستمتع!
+    </p>
+
+    <div class="hero-actions">
+      <a href="#pricing" class="btn" style="padding: 14px 32px; font-size: 16px;">
+        🚀 اختر باقتك وابدأ الآن
+      </a>
+      <a href="https://wa.me/?text=مرحباً،%20أريد%20الاشتراك%20نقداً%20في%20خدمة%20TranslateTV" target="_blank" class="btn btn-whatsapp" style="padding: 14px 28px; font-size: 16px;">
+        💵 اشترك نقداً عبر واتساب
+      </a>
+    </div>
+
+    <!-- Live TV Mockup -->
+    <div class="tv-mockup-wrapper">
+      <div class="tv-scene-content">
+        <span style="background: rgba(0,0,0,0.5); padding: 4px 12px; border-radius: 6px; font-size: 14px;">4K HDR • Live English Broadcast</span>
+      </div>
+
+      <div class="tv-overlay-sample">
+        <div class="en">"Welcome to the next generation of smart TV live subtitles."</div>
+        <div class="ar">"مرحباً بك في الجيل القادم من الترجمة الفورية لشاشات التلفزيون الذكية."</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section id="how-it-works" class="container">
+    <div class="section-title">
+      <h2>كيف يعمل التطبيق؟</h2>
+      <p>3 خطوات سهلة لا تتطلب أي خبرة تقنية</p>
+    </div>
+
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h3>افتح التطبيق على شاشتك</h3>
+        <p>قم بتشغيل TranslateTV على تلفزيون LG أو Android TV ليظهر لك رمز QR الخاص بشاشتك.</p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h3>امسح الكود بهاتفك</h3>
+        <p>افتح كاميرا أي هاتف وامسح الرمز، ليتم الربط التلقائي والتعرف على شاشتك في ثوانٍ معدودة.</p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h3>استمتع بالترجمة الفورية</h3>
+        <p>يتم التقاط الصوت والنصوص الإنجليزية وبث الترجمة العربية فائقة الوضوح فوق شاشة التلفزيون مباشرة.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section id="pricing" class="container">
+    <div class="section-title">
+      <h2>باقات الاشتراك — استلام نقدي مريح</h2>
+      <p>ادفع بالطريقة التي تناسبك (نقداً، تحويل بنكي، فودافون كاش، STC Pay) واستلم تفعيلك فوراً</p>
+    </div>
+
+    <div class="pricing-grid">
+      <!-- Free -->
+      <div class="pricing-card">
+        <div>
+          <div class="tier-name">تجريبي مجاني</div>
+          <div class="tier-price">$0 <span>/ دائماً</span></div>
+          <ul class="tier-features">
+            <li>30 دقيقة ترجمة شهرياً</li>
+            <li>جهاز تلفزيون واحد</li>
+            <li>ترجمة النصوص بالـ OCR</li>
+            <li>دعم المجتمع</li>
+          </ul>
+        </div>
+        <a href="#how-it-works" class="btn" style="background: #374151;">جرب الآن مجاناً</a>
+      </div>
+
+      <!-- Basic -->
+      <div class="pricing-card">
+        <div>
+          <div class="tier-name">الأساسية (Basic)</div>
+          <div class="tier-price">$5 <span>/ شهرياً</span></div>
+          <ul class="tier-features">
+            <li>10 ساعات ترجمة شهرياً</li>
+            <li>جهازين تلفزيون معاً</li>
+            <li>ترجمة النصوص والكلام</li>
+            <li>سرعة استجابة عالية</li>
+          </ul>
+        </div>
+        <a href="https://wa.me/?text=مرحباً،%20أريد%20الاشتراك%20نقداً%20في%20الباقة%20الأساسية%20(5$)" target="_blank" class="btn btn-whatsapp">اشترك نقداً عبر واتساب</a>
+      </div>
+
+      <!-- Pro -->
+      <div class="pricing-card featured">
+        <div class="pricing-badge">الأكثر طلباً ⭐</div>
+        <div>
+          <div class="tier-name">برو (PRO)</div>
+          <div class="tier-price">$12 <span>/ شهرياً</span></div>
+          <ul class="tier-features">
+            <li>ترجمة غير محدودة بالكامل</li>
+            <li>5 شاشات تلفزيون</li>
+            <li>ذكاء اصطناعي فائق الدقة</li>
+            <li>أولوية قصوى بدون انتظار</li>
+            <li>دعم فني خاص عبر واتساب</li>
+          </ul>
+        </div>
+        <a href="https://wa.me/?text=مرحباً،%20أريد%20الاشتراك%20نقداً%20في%20باقة%20برو%20PRO%20(12$)" target="_blank" class="btn btn-whatsapp">اشترك نقداً عبر واتساب</a>
+      </div>
+
+      <!-- Family -->
+      <div class="pricing-card">
+        <div>
+          <div class="tier-name">العائلية (Family)</div>
+          <div class="tier-price">$20 <span>/ شهرياً</span></div>
+          <ul class="tier-features">
+            <li>غير محدود لجميع أفراد الأسرة</li>
+            <li>10 أجهزة تلفزيون وهاتف</li>
+            <li>جميع مميزات باقة PRO</li>
+            <li>تفعيل وإعداد مخصص</li>
+          </ul>
+        </div>
+        <a href="https://wa.me/?text=مرحباً،%20أريد%20الاشتراك%20نقداً%20في%20الباقة%20العائلية%20(20$)" target="_blank" class="btn btn-whatsapp">اشترك نقداً عبر واتساب</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="container">
+    <p>© 2026 TranslateTV. جميع الحقوق محفوظة. منصة الترجمة الفورية الذكية لشاشات التلفزيون.</p>
+  </footer>
+
+</body>
+</html>

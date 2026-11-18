@@ -1,0 +1,36 @@
+services:
+  # 1. Local Whisper Audio Transcription Service (STT)
+  whisper:
+    build:
+      context: ./server-whisper
+      dockerfile: Dockerfile
+    container_name: translatetv-whisper
+    ports:
+      - "9000:9000"
+    environment:
+      - WHISPER_MODEL=base
+      - WHISPER_DEVICE=cpu
+    restart: unless-stopped
+
+  # 2. Offline LibreTranslate Machine Translation (EN -> AR)
+  libretranslate:
+    image: libretranslate/libretranslate:latest
+    container_name: translatetv-translate
+    ports:
+      - "5000:5000"
+    environment:
+      - LT_LOAD_ONLY=en,ar
+    restart: unless-stopped
+
+  # 3. Web & Admin Showcase Server
+  web:
+    image: nginx:alpine
+    container_name: translatetv-web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./website:/usr/share/nginx/html/website:ro
+      - ./admin:/usr/share/nginx/html/admin:ro
+      - ./mobile-web:/usr/share/nginx/html/remote:ro
+      - ./tv-webos:/usr/share/nginx/html/tv:ro
+    restart: unless-stopped

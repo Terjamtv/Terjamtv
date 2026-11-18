@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>TranslateTV — طباعة كروت وبطاقات التفعيل النقدية</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Cairo', sans-serif;
+    }
+
+    body {
+      background: #f1f5f9;
+      padding: 20px;
+    }
+
+    .no-print-toolbar {
+      background: #0f172a;
+      color: #fff;
+      padding: 16px 24px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .btn:hover { background: #1d4ed8; }
+
+    /* Printable Grid — Fits 8 to 10 cards per A4 page */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .voucher-card {
+      background: #ffffff;
+      border: 2px dashed #cbd5e1;
+      border-radius: 16px;
+      padding: 20px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      page-break-inside: avoid;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+    }
+
+    .card-brand {
+      font-size: 18px;
+      font-weight: 900;
+      color: #1e3a8a;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-tier-badge {
+      background: #1e3a8a;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 999px;
+    }
+
+    .card-body {
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    .card-title {
+      font-size: 14px;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+
+    .card-code {
+      font-size: 24px;
+      font-weight: 900;
+      color: #0f172a;
+      letter-spacing: 2px;
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      padding: 10px;
+      border-radius: 10px;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .card-footer {
+      border-top: 1px solid #e2e8f0;
+      padding-top: 10px;
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    /* Print Specific Media Styles */
+    @media print {
+      body {
+        background: #fff;
+        padding: 0;
+      }
+      .no-print-toolbar {
+        display: none !important;
+      }
+      .voucher-card {
+        box-shadow: none;
+        border: 1px dashed #94a3b8;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Non-printable top action bar -->
+  <div class="no-print-toolbar">
+    <div>
+      <h2 style="font-size: 18px;">🖨️ نموذج طباعة كروت التفعيل المسبقة الدفع</h2>
+      <p style="font-size: 13px; color: #94a3b8;">جاهزة للطباعة والقص والتوزيع في المحلات وللمشتركين نقداً</p>
+    </div>
+    <button class="btn" onclick="window.print()">🖨️ طباعة الكروت الآن</button>
+  </div>
+
+  <!-- Cards Grid Container -->
+  <div class="cards-grid" id="cardsGrid">
+    <!-- Sample Voucher Card 1 -->
+    <div class="voucher-card">
+      <div class="card-header">
+        <div class="card-brand">📺 TranslateTV</div>
+        <div class="card-tier-badge">باقة برو (PRO)</div>
+      </div>
+      <div class="card-body">
+        <div class="card-title">كرت اشتراك مدفوع • ترجمة فورية غير محدودة</div>
+        <div class="card-code">TRTV-PRO-1M-9X2K4L</div>
+        <div style="font-size: 12px; color: #10b981; font-weight: 700; margin-top: 6px;">صالح لمدة: شهر كامل (1 Month)</div>
+      </div>
+      <div class="card-footer">
+        <span>امسح الرمز أو أدخله بتطبيق TranslateTV</span>
+        <span>الدعم عبر واتساب</span>
+      </div>
+    </div>
+
+    <!-- Sample Voucher Card 2 -->
+    <div class="voucher-card">
+      <div class="card-header">
+        <div class="card-brand">📺 TranslateTV</div>
+        <div class="card-tier-badge">باقة برو (PRO)</div>
+      </div>
+      <div class="card-body">
+        <div class="card-title">كرت اشتراك مدفوع • ترجمة فورية غير محدودة</div>
+        <div class="card-code">TRTV-PRO-1M-8B4N7Y</div>
+        <div style="font-size: 12px; color: #10b981; font-weight: 700; margin-top: 6px;">صالح لمدة: شهر كامل (1 Month)</div>
+      </div>
+      <div class="card-footer">
+        <span>امسح الرمز أو أدخله بتطبيق TranslateTV</span>
+        <span>الدعم عبر واتساب</span>
+      </div>
+    </div>
+
+    <!-- Sample Voucher Card 3 -->
+    <div class="voucher-card">
+      <div class="card-header">
+        <div class="card-brand">📺 TranslateTV</div>
+        <div class="card-tier-badge">باقة عائلية (FAMILY)</div>
+      </div>
+      <div class="card-body">
+        <div class="card-title">كرت اشتراك عائلي • 10 أجهزة معاً</div>
+        <div class="card-code">TRTV-FAM-3M-2W8L9M</div>
+        <div style="font-size: 12px; color: #10b981; font-weight: 700; margin-top: 6px;">صالح لمدة: 3 أشهر (3 Months)</div>
+      </div>
+      <div class="card-footer">
+        <span>امسح الرمز أو أدخله بتطبيق TranslateTV</span>
+        <span>الدعم عبر واتساب</span>
+      </div>
+    </div>
+
+    <!-- Sample Voucher Card 4 -->
+    <div class="voucher-card">
+      <div class="card-header">
+        <div class="card-brand">📺 TranslateTV</div>
+        <div class="card-tier-badge">باقة أساسية (BASIC)</div>
+      </div>
+      <div class="card-body">
+        <div class="card-title">كرت اشتراك أساسي • جهازين معاً</div>
+        <div class="card-code">TRTV-BAS-1M-5P3R1K</div>
+        <div style="font-size: 12px; color: #10b981; font-weight: 700; margin-top: 6px;">صالح لمدة: شهر كامل (1 Month)</div>
+      </div>
+      <div class="card-footer">
+        <span>امسح الرمز أو أدخله بتطبيق TranslateTV</span>
+        <span>الدعم عبر واتساب</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Read generated vouchers from localStorage or opener window if available
+    window.addEventListener("DOMContentLoaded", () => {
+      const stored = localStorage.getItem("translatetv_print_vouchers");
+      if (stored) {
+        try {
+          const vouchers = JSON.parse(stored);
+          if (vouchers && vouchers.length > 0) {
+            renderCards(vouchers);
+          }
+        } catch(e){}
+      }
+    });
+
+    function renderCards(list) {
+      const grid = document.getElementById("cardsGrid");
+      grid.innerHTML = list.map(v => `
+        <div class="voucher-card">
+          <div class="card-header">
+            <div class="card-brand">📺 TranslateTV</div>
+            <div class="card-tier-badge">باقة ${(v.tier || 'PRO').toUpperCase()}</div>
+          </div>
+          <div class="card-body">
+            <div class="card-title">كرت اشتراك مدفوع • ${v.batch_name || 'دفعة نقدية'}</div>
+            <div class="card-code">${v.code}</div>
+            <div style="font-size: 12px; color: #10b981; font-weight: 700; margin-top: 6px;">
+              صالح لمدة: ${v.duration_months} شهر (${v.duration_months} Month)
+            </div>
+          </div>
+          <div class="card-footer">
+            <span>امسح الرمز أو أدخله في تطبيق TranslateTV</span>
+            <span>الدعم عبر واتساب</span>
+          </div>
+        </div>
+      `).join('');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TranslateTV — لوحة تحكم المشرف (Admin Dashboard)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Cairo', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      font-size: 32px;
+      background: #1e3a8a;
+      padding: 8px 12px;
+      border-radius: 12px;
+    }
+
+    .brand h1 {
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .brand p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .server-config {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background: var(--card-bg);
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .server-config input {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-success { background: var(--success); }
+    .btn-success:hover { background: #059669; }
+
+    .btn-secondary {
+      background: #334155;
+    }
+    .btn-secondary:hover {
+      background: #475569;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .stat-card .label {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .stat-card .val {
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    /* Search & Filter Bar */
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .search-input {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    /* Users Table */
+    .table-container {
+      background: var(--card-bg);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: right;
+    }
+
+    th, td {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+
+    th {
+      background: #172033;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .badge-free { background: #334155; color: #cbd5e1; }
+    .badge-basic { background: #1e3a8a; color: #93c5fd; }
+    .badge-pro { background: #701a75; color: #f0abfc; }
+    .badge-family { background: #064e3b; color: #6ee7b7; }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .modal {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 500px;
+      padding: 24px;
+    }
+
+    .modal h2 {
+      margin-bottom: 16px;
+      font-size: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .form-group select, .form-group input {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 24px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="brand-icon">📺</div>
+        <div>
+          <h1>TranslateTV — إدارة الاشتراكات</h1>
+          <p>لوحة التحكم بالدفع النقدي وتفعيل المشتركين</p>
+        </div>
+      </div>
+
+      <div class="server-config">
+        <input type="text" id="apiEndpoint" placeholder="رابط الـ API" value="http://localhost:8787">
+        <input type="password" id="adminSecret" placeholder="Admin Secret Key" value="translatetv-admin-secret-2026">
+        <button class="btn" onclick="fetchUsers()">تحديث</button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div style="display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">
+      <button class="btn" id="tabUsersBtn" onclick="switchAdminTab('users')">👥 إدارة المستخدمين</button>
+      <button class="btn btn-secondary" id="tabVouchersBtn" onclick="switchAdminTab('vouchers')">🎟️ كروت وبطاقات التفعيل النقدية</button>
+    </div>
+
+    <!-- TAB 1: USERS -->
+    <div id="tabUsersSection">
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="label">إجمالي المستخدمين</div>
+          <div class="val" id="statTotalUsers">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">المشتركين النشطين (مدفوع)</div>
+          <div class="val" id="statPaidUsers" style="color: var(--success);">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">الحسابات المجانية</div>
+          <div class="val" id="statFreeUsers" style="color: var(--warning);">0</div>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <input type="text" class="search-input" id="searchInput" placeholder="بحث بالاسم أو رقم الهاتف..." oninput="filterUsers()">
+      </div>
+
+      <!-- Users Table -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>الاسم</th>
+              <th>الهاتف</th>
+              <th>الباقة الحالية</th>
+              <th>الاستهلاك الشهري</th>
+              <th>تاريخ انتهاء الاشتراك</th>
+              <th>الإجراء (الدفع النقدي)</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-muted);">جاري تحميل البيانات...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 2: VOUCHERS -->
+    <div id="tabVouchersSection" style="display: none;">
+      <div class="card" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="font-size: 18px; margin-bottom: 16px;">🎟️ توليد كروت تفعيل مسبقة الدفع (للبيع النقدي والموزعين)</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px;">
+          <div>
+            <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">نوع الباقة</label>
+            <select id="vGenTier" style="width: 100%; background: #0f172a; border: 1px solid var(--border); color: #fff; padding: 8px; border-radius: 8px;">
+              <option value="basic">أساسي (Basic - 5$)</option>
+              <option value="pro" selected>برو (Pro - 12$)</option>
+              <option value="family">عائلي (Family - 20$)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">المدة بالأشهر</label>
+            <select id="vGenMonths" style="width: 100%; background: #0f172a; border: 1px solid var(--border); color: #fff; padding: 8px; border-radius: 8px;">
+              <option value="1">شهر واحد (1M)</option>
+              <option value="3">3 أشهر (3M)</option>
+              <option value="6">6 أشهر (6M)</option>
+              <option value="12">سنة كاملة (12M)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">العدد المطلوب</label>
+            <input type="number" id="vGenCount" value="5" min="1" max="50" style="width: 100%; background: #0f172a; border: 1px solid var(--border); color: #fff; padding: 8px; border-radius: 8px;">
+          </div>
+          <div>
+            <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">اسم الدفعة / الموزع</label>
+            <input type="text" id="vGenBatch" placeholder="مثال: دفعة كروت محل س" style="width: 100%; background: #0f172a; border: 1px solid var(--border); color: #fff; padding: 8px; border-radius: 8px;">
+          </div>
+        </div>
+        <div style="margin-top: 16px; display: flex; gap: 12px;">
+          <button class="btn btn-success" onclick="generateVouchers()">⚡ توليد الكروت الآن</button>
+          <button class="btn btn-secondary" onclick="openPrintView()">🖨️ طباعة الكروت للقص والتوزيع</button>
+        </div>
+      </div>
+
+      <!-- Vouchers List -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>كود التفعيل</th>
+              <th>الباقة</th>
+              <th>المدة</th>
+              <th>الدفعة</th>
+              <th>الحالة</th>
+              <th>نسخ الكود</th>
+            </tr>
+          </thead>
+          <tbody id="vouchersTableBody">
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-muted);">اضغط لتوليد أو جلب الكروت...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Subscription Modal -->
+  <div class="modal-backdrop" id="subModal">
+    <div class="modal">
+      <h2>💵 تفعيل اشتراك (استلام نقدي)</h2>
+      <p id="modalUserName" style="color: var(--text-muted); margin-bottom: 20px; font-size: 14px;"></p>
+
+      <div class="form-group">
+        <label>اختيار الباقة</label>
+        <select id="modalTier">
+          <option value="basic">أساسي (Basic) — 10 ساعات ترجمة - جهازين</option>
+          <option value="pro" selected>برو (Pro) — ترجمة غير محدودة - 5 أجهزة</option>
+          <option value="family">عائلي (Family) — غير محدود - 10 أجهزة</option>
+          <option value="free">إلغاء إلى مجاني (Free)</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="durationGroup">
+        <label>مدة الاشتراك (الأشهر المدفوعة)</label>
+        <select id="modalDuration">
+          <option value="1">شهر واحد</option>
+          <option value="3">3 أشهر</option>
+          <option value="6">6 أشهر</option>
+          <option value="12">سنة كاملة (12 شهر)</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+        <input type="checkbox" id="modalResetUsage" checked style="width: auto;">
+        <label for="modalResetUsage" style="margin-bottom: 0;">تصفير عداد الدقائق المستهلكة لهذا الشهر</label>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">إلغاء</button>
+        <button class="btn btn-success" onclick="confirmSubscription()">تأكيد واستلام المبلغ ✅</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let usersList = [];
+    let currentSelectedUserId = null;
+
+    async function fetchUsers() {
+      const api = document.getElementById("apiEndpoint").value.trim();
+      const secret = document.getElementById("adminSecret").value.trim();
+      const tbody = document.getElementById("usersTableBody");
+
+      try {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center;">جاري الاتصال بالسيرفر...</td></tr>`;
+        const res = await fetch(`${api}/api/admin/users`, {
+          headers: { "X-Admin-Secret": secret }
+        });
+
+        if (!res.ok) {
+          throw new Error("فشل الاتصال: " + res.statusText);
+        }
+
+        const data = await res.json();
+        usersList = data.users || [];
+        renderUsers(usersList);
+        updateStats(usersList);
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--danger);">${err.message}</td></tr>`;
+      }
+    }
+
+    function updateStats(users) {
+      document.getElementById("statTotalUsers").textContent = users.length;
+      const paid = users.filter(u => u.subscription_tier !== 'free').length;
+      document.getElementById("statPaidUsers").textContent = paid;
+      document.getElementById("statFreeUsers").textContent = users.length - paid;
+    }
+
+    function renderUsers(users) {
+      const tbody = document.getElementById("usersTableBody");
+      if (!users.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">لا يوجد مستخدمين مسجلين بعد</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = users.map(u => {
+        const tierBadgeClass = `badge-${u.subscription_tier}`;
+        const tierName = { free: "مجاني", basic: "أساسي", pro: "برو", family: "عائلي" }[u.subscription_tier] || u.subscription_tier;
+        const expiry = u.subscription_expires_at ? new Date(u.subscription_expires_at).toLocaleDateString('ar-EG') : "—";
+        const minutes = `${u.monthly_minutes_used} / ${u.monthly_minutes_limit === 99999 ? '∞' : u.monthly_minutes_limit} دقيقة`;
+
+        return `
+          <tr>
+            <td><strong>${u.display_name || 'بدون اسم'}</strong></td>
+            <td dir="ltr" style="text-align: right;">${u.phone || '—'}</td>
+            <td><span class="badge ${tierBadgeClass}">${tierName}</span></td>
+            <td>${minutes}</td>
+            <td>${expiry}</td>
+            <td>
+              <button class="btn btn-success" style="font-size: 12px; padding: 6px 12px;" onclick="openModal('${u.id}', '${u.display_name || 'المستخدم'}')">
+                💵 تفعيل / تجديد
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterUsers() {
+      const query = document.getElementById("searchInput").value.toLowerCase();
+      const filtered = usersList.filter(u => 
+        (u.display_name && u.display_name.toLowerCase().includes(query)) ||
+        (u.phone && u.phone.includes(query))
+      );
+      renderUsers(filtered);
+    }
+
+    function openModal(userId, userName) {
+      currentSelectedUserId = userId;
+      document.getElementById("modalUserName").textContent = `المستخدم: ${userName} (ID: ${userId})`;
+      document.getElementById("subModal").style.display = "flex";
+    }
+
+    function closeModal() {
+      document.getElementById("subModal").style.display = "none";
+      currentSelectedUserId = null;
+    }
+
+    async function confirmSubscription() {
+      if (!currentSelectedUserId) return;
+
+      const api = document.getElementById("apiEndpoint").value.trim();
+      const secret = document.getElementById("adminSecret").value.trim();
+      const tier = document.getElementById("modalTier").value;
+      const duration = parseInt(document.getElementById("modalDuration").value);
+      const resetUsage = document.getElementById("modalResetUsage").checked;
+
+      try {
+        const res = await fetch(`${api}/api/admin/users/${currentSelectedUserId}/subscription`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Admin-Secret": secret
+          },
+          body: JSON.stringify({
+            tier: tier,
+            duration_months: duration,
+            reset_usage: resetUsage
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "فشل التفعيل");
+
+        alert("✅ تم تفعيل الاشتراك بنجاح!");
+        closeModal();
+        fetchUsers();
+      } catch (err) {
+        alert("❌ خطأ: " + err.message);
+      }
+    }
+
+    function switchAdminTab(tab) {
+      if (tab === 'users') {
+        document.getElementById('tabUsersSection').style.display = 'block';
+        document.getElementById('tabVouchersSection').style.display = 'none';
+        document.getElementById('tabUsersBtn').className = 'btn';
+        document.getElementById('tabVouchersBtn').className = 'btn btn-secondary';
+        fetchUsers();
+      } else {
+        document.getElementById('tabUsersSection').style.display = 'none';
+        document.getElementById('tabVouchersSection').style.display = 'block';
+        document.getElementById('tabUsersBtn').className = 'btn btn-secondary';
+        document.getElementById('tabVouchersBtn').className = 'btn';
+        fetchVouchers();
+      }
+    }
+
+    async function generateVouchers() {
+      const api = document.getElementById("apiEndpoint").value.trim();
+      const secret = document.getElementById("adminSecret").value.trim();
+      const tier = document.getElementById("vGenTier").value;
+      const months = parseInt(document.getElementById("vGenMonths").value);
+      const count = parseInt(document.getElementById("vGenCount").value);
+      const batch = document.getElementById("vGenBatch").value.trim();
+
+      try {
+        const res = await fetch(`${api}/api/voucher/generate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Admin-Secret": secret
+          },
+          body: JSON.stringify({
+            tier: tier,
+            duration_months: months,
+            count: count,
+            batch_name: batch
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "فشل توليد الكروت");
+
+        alert(`✅ تم توليد ${data.count} كرت بنجاح!`);
+        currentVouchersList = data.vouchers || [];
+        fetchVouchers();
+      } catch (e) {
+        alert("❌ خطأ: " + e.message);
+      }
+    }
+
+    let currentVouchersList = [];
+
+    function openPrintView() {
+      if (!currentVouchersList.length) {
+        alert("يرجى توليد أو جلب الكروت أولاً للطباعة.");
+        return;
+      }
+      localStorage.setItem("translatetv_print_vouchers", JSON.stringify(currentVouchersList));
+      window.open("voucher-print.html", "_blank");
+    }
+
+    async function fetchVouchers() {
+      const api = document.getElementById("apiEndpoint").value.trim();
+      const secret = document.getElementById("adminSecret").value.trim();
+      const tbody = document.getElementById("vouchersTableBody");
+
+      try {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center;">جاري جلب كروت التفعيل...</td></tr>`;
+        const res = await fetch(`${api}/api/voucher/list`, {
+          headers: { "X-Admin-Secret": secret }
+        });
+        const data = await res.json();
+        const list = data.vouchers || [];
+        currentVouchersList = list;
+
+        if (!list.length) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">لا توجد كروت مولدة بعد. اضغط زر التوليد أعلاه.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = list.map(v => `
+          <tr>
+            <td><strong style="color: var(--gold); letter-spacing: 1px;">${v.code}</strong></td>
+            <td><span class="badge badge-${v.tier}">${v.tier.toUpperCase()}</span></td>
+            <td>${v.duration_months} شهر</td>
+            <td>${v.batch_name || 'عام'}</td>
+            <td>
+              <span class="badge ${v.is_redeemed ? 'badge-free' : 'badge-family'}">
+                ${v.is_redeemed ? 'مستخدم 🔴' : 'متاح للبيع 🟢'}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-secondary" style="font-size: 11px; padding: 4px 10px;" onclick="navigator.clipboard.writeText('${v.code}'); alert('تم نسخ الكود: ${v.code}');">
+                📋 نسخ
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--danger);">${e.message}</td></tr>`;
+      }
+    }
+
+    // Auto-fetch on load if api is available
+    window.addEventListener("DOMContentLoaded", () => {
+      fetchUsers();
+    });
+  </script>
+</body>
+</html>
