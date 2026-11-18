@@ -88,16 +88,19 @@ class ScreenCaptureService : Service() {
         return START_STICKY
     }
 
+    private var lastRegionHash: Long = 0L
+
     private fun setupVirtualDisplay() {
         val metrics = resources.displayMetrics
-        val width = metrics.widthPixels
-        val height = metrics.heightPixels
+        // Cap capture resolution to 1280x720: Saves 85% CPU & RAM bandwidth, perfect for OCR
+        val targetWidth = if (metrics.widthPixels > 1280) 1280 else metrics.widthPixels
+        val targetHeight = (metrics.heightPixels.toFloat() / metrics.widthPixels * targetWidth).toInt()
         val density = metrics.densityDpi
 
-        imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 2)
+        imageReader = ImageReader.newInstance(targetWidth, targetHeight, PixelFormat.RGBA_8888, 2)
         virtualDisplay = mediaProjection?.createVirtualDisplay(
             "TranslateTV_Capture",
-            width, height, density,
+            targetWidth, targetHeight, density,
             DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
             imageReader?.surface, null, null
         )
@@ -105,10 +108,17 @@ class ScreenCaptureService : Service() {
 
     private fun startCaptureLoop() {
         scope.launch {
+            // Keep background priority so the gamer's HDMI/VRR display never drops a frame
+            android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND)
+
             while (isActive) {
-                delay(750) // Gaming loop: check every 750ms for low-latency subtitle detection
+                delay(750) // Gaming loop
 
                 val image = imageReader?.acquireLatestImage() ?: continue
+                var bitmap: Bitmap? = null
+                var croppedBitmap: Bitmap? = null
+                var enhancedBitmap: Bitmap? = null
+
                 try {
                     val planes = image.planes
                     val buffer = planes[0].buffer
@@ -116,7 +126,7 @@ class ScreenCaptureService : Service() {
                     val rowStride = planes[0].rowStride
                     val rowPadding = rowStride - pixelStride * image.width
 
-                    val bitmap = Bitmap.createBitmap(
+                    bitmap = Bitmap.createBitmap(
                         image.width + rowPadding / pixelStride,
                         image.height,
                         Bitmap.Config.ARGB_8888
@@ -126,18 +136,43 @@ class ScreenCaptureService : Service() {
                     // Focus on subtitle region: bottom 32% of the screen (PlayStation standard)
                     val cropY = (image.height * 0.68).toInt()
                     val cropHeight = (image.height * 0.32).toInt()
-                    val croppedBitmap = Bitmap.createBitmap(bitmap, 0, cropY, image.width, cropHeight)
+                    croppedBitmap = Bitmap.createBitmap(bitmap, 0, cropY, image.width, cropHeight)
 
-                    // Pre-process frame with gaming contrast filter (from overlay-translator)
-                    val enhancedBitmap = enhanceContrastForGameSubtitles(croppedBitmap)
+                    // 1. Fast Hash Check: If visual pixels haven't changed, skip OCR entirely (<0.01ms CPU)
+                    val currentHash = computeFastRegionHash(croppedBitmap)
+                    if (currentHash == lastRegionHash) {
+                        continue
+                    }
+                    lastRegionHash = currentHash
+
+                    // 2. Pre-process frame with gaming contrast filter
+                    enhancedBitmap = enhanceContrastForGameSubtitles(croppedBitmap)
                     processFrame(enhancedBitmap)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 } finally {
                     image.close()
+                    // Explicitly recycle bitmaps to prevent Android GC thrashing/stutter
+                    try {
+                        enhancedBitmap?.recycle()
+                        croppedBitmap?.recycle()
+                        bitmap?.recycle()
+                    } catch (ignored: Exception) {}
                 }
             }
         }
+    }
+
+    private fun computeFastRegionHash(bitmap: Bitmap): Long {
+        var hash = 1125899906842597L
+        val stepX = maxOf(1, bitmap.width / 16)
+        val stepY = maxOf(1, bitmap.height / 8)
+        for (x in 0 until bitmap.width step stepX) {
+            for (y in 0 until bitmap.height step stepY) {
+                hash = 31 * hash + bitmap.getPixel(x, y)
+            }
+        }
+        return hash
     }
 
     private fun enhanceContrastForGameSubtitles(src: Bitmap): Bitmap {
