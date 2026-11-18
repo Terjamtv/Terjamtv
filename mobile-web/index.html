@@ -234,9 +234,11 @@
     </div>
 
     <!-- Language Selector Dropdown -->
-    <div style="margin-bottom: 14px; background: #0b1120; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+    <div
+      style="margin-bottom: 14px; background: #0b1120; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
       <label style="font-size: 13px; color: var(--text-muted); font-weight: 700;">وش جالس تشوف؟</label>
-      <select id="sourceLangSelect" onchange="onLanguageChanged()" style="background: #1e293b; color: #fff; border: 1px solid var(--border); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 13px; outline: none;">
+      <select id="sourceLangSelect" onchange="onLanguageChanged()"
+        style="background: #1e293b; color: #fff; border: 1px solid var(--border); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 13px; outline: none;">
         <option value="en" selected>🇬🇧 أفلام ومسلسلات إنجليزية</option>
         <option value="tr">🇹🇷 مسلسلات تركية</option>
         <option value="ko">🇰🇷 دراما كورية (K-Drama)</option>
@@ -334,7 +336,7 @@
         recognition.lang = LANG_MAP[currentSourceLang] || "en-US";
         if (isListening) {
           recognition.stop();
-          setTimeout(() => { try { recognition.start(); } catch(e){} }, 300);
+          setTimeout(() => { try { recognition.start(); } catch (e) { } }, 300);
         }
       }
     }
