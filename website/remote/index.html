@@ -313,7 +313,9 @@
     const urlParams = new URLSearchParams(window.location.search);
     const deviceId = urlParams.get("device_id") || localStorage.getItem("translatetv_paired_device") || "demo-tv-device";
     const pairingCode = urlParams.get("code");
-    const apiBase = window.location.origin; // or your backend url
+    const apiBase = (window.location.protocol.startsWith("http") && window.location.port === "8787")
+      ? window.location.origin
+      : "https://translatetv-api.honda-druid.workers.dev";
 
     let isListening = false;
     let recognition = null;

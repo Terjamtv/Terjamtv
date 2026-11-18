@@ -4,9 +4,11 @@
 
 // Configuration
 const CONFIG = {
-  // In production, point to your Cloudflare Worker domain:
-  // e.g. "https://api.translatetv.app"
-  apiBase: localStorage.getItem("translatetv_api") || "http://localhost:8787",
+  // Live Cloudflare Worker in production, localhost when testing on 8787
+  apiBase: localStorage.getItem("translatetv_api") || 
+    (window.location.protocol.startsWith("http") && window.location.port === "8787"
+      ? "http://localhost:8787"
+      : "https://translatetv-api.honda-druid.workers.dev"),
   pollIntervalMs: 3000,
   deviceType: "webos",
 };

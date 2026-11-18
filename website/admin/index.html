@@ -652,6 +652,9 @@
 
     // Auto-fetch on load if api is available
     window.addEventListener("DOMContentLoaded", () => {
+      if (window.location.protocol.startsWith("http") && window.location.port !== "8787") {
+        document.getElementById("apiEndpoint").value = "https://translatetv-api.honda-druid.workers.dev";
+      }
       fetchUsers();
     });
   </script>

@@ -29,8 +29,8 @@ translateRoute.post("/", async (c) => {
   const dialect = body.dialect || "saudi"; // Default to Saudi colloquial Arabic
   const deviceId = body.device_id;
 
-  // Demo mode fallback when Supabase URL is placeholder or empty
-  const isDemo = !c.env.SUPABASE_URL || c.env.SUPABASE_URL.includes("your-project-id");
+  // Demo mode fallback when Supabase URL or Key is missing
+  const isDemo = !c.env.SUPABASE_URL || !c.env.SUPABASE_SERVICE_ROLE_KEY || c.env.SUPABASE_URL.includes("your-project-id");
 
   if (isDemo) {
     // Quick translation fallback for instant local testing + Saudi dialect formatting

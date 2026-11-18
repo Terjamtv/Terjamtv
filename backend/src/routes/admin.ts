@@ -41,7 +41,7 @@ const demoUsers = [
 ];
 
 function isDemoMode(env: Env): boolean {
-  return !env.SUPABASE_URL || env.SUPABASE_URL.includes("your-project-id");
+  return !env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_URL.includes("your-project-id");
 }
 
 /**

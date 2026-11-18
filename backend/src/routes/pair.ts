@@ -17,7 +17,7 @@ function generatePairingCode(): string {
 const localDevices = new Map<string, any>();
 
 function isLocalDemoMode(env: Env): boolean {
-  return !env.SUPABASE_URL || env.SUPABASE_URL.includes("your-project-id");
+  return !env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_URL.includes("your-project-id");
 }
 
 /**
@@ -55,13 +55,7 @@ pairRoute.post("/init", async (c) => {
       demo_mode: true,
       device_id: deviceId,
       pairing_code: pairingCode,
-      qr_payload: JSON.stringify({
-        app: "translatetv",
-        action: "pair",
-        code: pairingCode,
-        device_id: deviceId,
-        type: body.device_type
-      })
+      qr_payload: `https://terjamtv.pages.dev/remote?code=${pairingCode}&device_id=${deviceId}`
     });
   }
 
@@ -89,13 +83,7 @@ pairRoute.post("/init", async (c) => {
     success: true,
     device_id: data.id,
     pairing_code: data.pairing_code,
-    qr_payload: JSON.stringify({
-      app: "translatetv",
-      action: "pair",
-      code: data.pairing_code,
-      device_id: data.id,
-      type: body.device_type
-    })
+    qr_payload: `https://terjamtv.pages.dev/remote?code=${data.pairing_code}&device_id=${data.id}`
   });
 });
 
