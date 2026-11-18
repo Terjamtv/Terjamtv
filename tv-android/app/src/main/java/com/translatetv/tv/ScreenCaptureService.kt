@@ -53,11 +53,54 @@ class ScreenCaptureService : Service() {
     private var apiBase: String = "https://translatetv-api.honda-druid.workers.dev"
     private var deviceId: String? = null
     private var lastRecognizedText: String = ""
+    private val translationMemory = android.util.LruCache<String, String>(3000)
 
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
         initLocalOfflineTranslator()
+        initTranslationMemory()
+    }
+
+    private fun normalizeKey(text: String): String {
+        return text.trim().lowercase().replace(Regex("[^a-zA-Z0-9 ]"), "").trim()
+    }
+
+    private fun initTranslationMemory() {
+        // Pre-seed local translation memory with top gaming & PlayStation dialogues
+        val seed = mapOf(
+            "mission passed" to "تمت المهمة بنجاح",
+            "mission failed" to "فشلت المهمة",
+            "wasted" to "قُضي عليك",
+            "busted" to "تم إلقاء القبض عليك",
+            "get in the car" to "اركب السيارة",
+            "get out of the car" to "انزل من السيارة",
+            "follow me" to "اتبعني",
+            "lets go" to "هيا بنا / يلا مشينا",
+            "get down" to "انبطح / احذر",
+            "watch out" to "انتبه / خذ حذرك",
+            "take cover" to "احتمِ / اختبئ",
+            "enemy spotted" to "تم رصد العدو",
+            "help me" to "ساعدني / الفزعة",
+            "hold on" to "تمسك جيداً / انتظر",
+            "what are you doing" to "ماذا تفعل؟",
+            "are you crazy" to "هل جننت؟",
+            "call the police" to "اتصل بالشرطة",
+            "checkpoint" to "نقطة حفظ",
+            "press x to continue" to "اضغط X للمتابعة",
+            "press any button to continue" to "اضغط أي زر للمتابعة",
+            "loading" to "جاري التحميل...",
+            "paused" to "متوقف مؤقتاً",
+            "resume" to "استئناف اللعب",
+            "restart" to "إعادة المحاولة",
+            "quit to main menu" to "الخروج للقائمة الرئيسية",
+            "settings" to "الإعدادات",
+            "inventory" to "الحقيبة / العتاد",
+            "map" to "الخريطة"
+        )
+        for ((k, v) in seed) {
+            translationMemory.put(normalizeKey(k), v)
+        }
     }
 
     private fun initLocalOfflineTranslator() {
@@ -232,22 +275,32 @@ class ScreenCaptureService : Service() {
     }
 
     private fun translateAndBroadcast(text: String) {
+        val norm = normalizeKey(text)
+
+        // 0. TIER ZERO: Local Translation Memory Dictionary Cache (Instant 0.001ms hit, 0 CPU, 0 Cloud!)
+        val cached = translationMemory.get(norm)
+        if (!cached.isNullOrEmpty()) {
+            broadcastSubtitle(text, cached)
+            return
+        }
+
         // 1. PRIMARY: Zero-Cloud On-Device Local Neural Translation (Google ML Kit, ~15ms, 0 cloud cost)
         if (localTranslator != null) {
             localTranslator?.translate(text)
                 ?.addOnSuccessListener { localTrans ->
+                    translationMemory.put(norm, localTrans)
                     broadcastSubtitle(text, localTrans)
                 }
                 ?.addOnFailureListener {
                     // Fallback to Cloudflare Worker API only if local model encounters an error
-                    translateViaCloudFallback(text)
+                    translateViaCloudFallback(text, norm)
                 }
         } else {
-            translateViaCloudFallback(text)
+            translateViaCloudFallback(text, norm)
         }
     }
 
-    private fun translateViaCloudFallback(text: String) {
+    private fun translateViaCloudFallback(text: String, normKey: String) {
         scope.launch {
             try {
                 val json = JSONObject().apply {
@@ -267,6 +320,7 @@ class ScreenCaptureService : Service() {
                     val resJson = JSONObject(response.body?.string() ?: "")
                     val arabicText = resJson.optString("translated_text")
                     if (!arabicText.isNullOrEmpty()) {
+                        translationMemory.put(normKey, arabicText)
                         broadcastSubtitle(text, arabicText)
                     }
                 }

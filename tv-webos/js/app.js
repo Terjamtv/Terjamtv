@@ -206,9 +206,62 @@ function startLiveSubtitleListener() {
   }, 600); // check every 600ms for instant subtitle updates
 }
 
+// Local Translation Memory (Zero Cloud Offline Dictionary Cache)
+const LocalTM = {
+  storageKey: "translatetv_tm_v1",
+  dict: {},
+  init() {
+    try {
+      this.dict = JSON.parse(localStorage.getItem(this.storageKey) || "{}");
+    } catch (e) {
+      this.dict = {};
+    }
+    // Pre-seed with common PlayStation & GTA gaming dialogue
+    const seed = {
+      "mission passed": "تمت المهمة بنجاح",
+      "mission failed": "فشلت المهمة",
+      "wasted": "قُضي عليك",
+      "busted": "تم إلقاء القبض عليك",
+      "get in the car": "اركب السيارة",
+      "get out": "انزل / اخرج",
+      "follow me": "اتبعني",
+      "lets go": "هيا بنا / يلا مشينا",
+      "watch out": "انتبه / خذ حذرك",
+      "help me": "ساعدني / الفزعة",
+      "checkpoint": "نقطة حفظ",
+      "paused": "متوقف مؤقتاً",
+      "resume": "استئناف اللعب",
+      "press any button to continue": "اضغط أي زر للمتابعة"
+    };
+    for (const [k, v] of Object.entries(seed)) {
+      if (!this.dict[k]) this.dict[k] = v;
+    }
+  },
+  normalize(text) {
+    return (text || "").toLowerCase().trim().replace(/[^a-zA-Z0-9 ]/g, "").trim();
+  },
+  get(text) {
+    return this.dict[this.normalize(text)] || null;
+  },
+  set(text, trans) {
+    const k = this.normalize(text);
+    if (!k || !trans) return;
+    this.dict[k] = trans;
+    try {
+      localStorage.setItem(this.storageKey, JSON.stringify(this.dict));
+    } catch (e) {}
+  }
+};
+LocalTM.init();
+
 let subtitleClearTimeout = null;
 
 function displaySubtitle(original, translated) {
+  // Store into local offline memory dictionary
+  if (original && translated) {
+    LocalTM.set(original, translated);
+  }
+
   originalTextEl.textContent = original;
   translatedTextEl.textContent = translated;
   subtitleOverlay.style.display = "block";
