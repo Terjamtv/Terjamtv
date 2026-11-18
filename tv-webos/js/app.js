@@ -159,16 +159,22 @@ function activateTranslationScreen(deviceData) {
   if (pollTimer) clearInterval(pollTimer);
   showScreen("screenTranslation");
 
+  // Switch entire webOS window to transparent in-game overlay
+  document.body.classList.add("in-game-overlay");
+  document.documentElement.classList.add("in-game-overlay");
+  const hint = document.getElementById("hintMessage");
+  if (hint) hint.style.display = "none";
+
   connectedUserName.textContent = deviceData.user_name || "شاشة العرض المباشر";
   connectedTier.textContent = (deviceData.tier || "PRO").toUpperCase();
 
   // Show temporary hint
-  showToast("تم الاتصال بنجاح! جاهز لعرض الترجمة");
+  showToast("تم الاتصال بنجاح! وضع الترجمة فوق اللعبة نشط 🎮");
 
-  // Auto hide top bar after 6 seconds
+  // Auto hide top bar after 3 seconds
   setTimeout(() => {
-    topBar.style.opacity = "0.2";
-  }, 6000);
+    topBar.style.display = "none";
+  }, 3000);
 
   // Setup periodic subtitle simulation / live listener
   startLiveSubtitleListener();

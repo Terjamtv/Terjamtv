@@ -10,5 +10,7 @@
   "bgImage": "splash.png",
   "resolution": "1920x1080",
   "requiredVersion": "5.0.0",
-  "transparent": true
+  "transparent": true,
+  "defaultWindowType": "overlay",
+  "handlesRelaunch": true
 }

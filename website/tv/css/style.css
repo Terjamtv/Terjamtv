@@ -24,6 +24,22 @@ body {
   position: relative;
 }
 
+/* Fullscreen In-Game Transparent Overlay Mode */
+body.in-game-overlay,
+html.in-game-overlay {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+#screenTranslation {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+body.in-game-overlay #screenTranslation .canvas-area {
+  display: none !important;
+}
+
 .screen {
   display: none;
   width: 100%;
