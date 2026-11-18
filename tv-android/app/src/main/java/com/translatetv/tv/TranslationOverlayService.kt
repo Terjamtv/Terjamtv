@@ -51,6 +51,9 @@ class TranslationOverlayService : Service() {
         }
     }
 
+    private var hideRunnable: Runnable? = null
+    private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+
     private fun createOverlayView() {
         val layoutType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -68,31 +71,38 @@ class TranslationOverlayService : Service() {
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-            y = 60 // 60px padding from the bottom
+            y = 70 // 70px padding from the bottom
         }
 
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setBackgroundColor(Color.parseColor("#D90B1120")) // 85% transparent dark
-            setPadding(40, 20, 40, 24)
+            // Semi-transparent rounded backdrop for PlayStation gaming HUD
+            val shape = android.graphics.drawable.GradientDrawable().apply {
+                setColor(Color.parseColor("#CC0B0F19")) // 80% dark slate
+                cornerRadius = 24f
+            }
+            background = shape
+            setPadding(48, 18, 48, 22)
+            visibility = View.GONE // Hidden by default until subtitles appear
         }
 
         tvOriginal = TextView(this).apply {
-            textSize = 18f
-            setTextColor(Color.parseColor("#94A3B8"))
+            textSize = 17f
+            setTextColor(Color.parseColor("#94A3B8")) // Subtle grey for original English
             gravity = Gravity.CENTER
             textDirection = View.TEXT_DIRECTION_LTR
             visibility = View.VISIBLE
+            setShadowLayer(3f, 0f, 1f, Color.BLACK)
         }
 
         tvTranslated = TextView(this).apply {
-            textSize = 28f
-            setTextColor(Color.WHITE)
+            textSize = 30f
+            setTextColor(Color.parseColor("#FDE047")) // High-contrast gaming yellow (GTA/Rockstar style)
             gravity = Gravity.CENTER
             textDirection = View.TEXT_DIRECTION_RTL
             paint.isFakeBoldText = true
-            setShadowLayer(4f, 0f, 2f, Color.BLACK)
+            setShadowLayer(6f, 0f, 3f, Color.BLACK)
         }
 
         container.addView(tvOriginal)
@@ -103,12 +113,23 @@ class TranslationOverlayService : Service() {
     }
 
     fun updateText(original: String, translated: String) {
+        if (original.isBlank() && translated.isBlank()) return
+
         tvOriginal.text = original
         tvTranslated.text = translated
+        overlayView?.visibility = View.VISIBLE
+
+        // Auto-fade / Auto-hide subtitle after 4.5s if dialogue ends (Rockstar / GTA style)
+        hideRunnable?.let { mainHandler.removeCallbacks(it) }
+        hideRunnable = Runnable {
+            overlayView?.visibility = View.GONE
+        }
+        mainHandler.postDelayed(hideRunnable!!, 4500)
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        hideRunnable?.let { mainHandler.removeCallbacks(it) }
         unregisterReceiver(subtitleReceiver)
         if (overlayView != null) {
             windowManager.removeView(overlayView)

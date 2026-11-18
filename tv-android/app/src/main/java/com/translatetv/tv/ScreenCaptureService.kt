@@ -106,7 +106,7 @@ class ScreenCaptureService : Service() {
     private fun startCaptureLoop() {
         scope.launch {
             while (isActive) {
-                delay(1500) // Capture frame every 1.5 seconds
+                delay(750) // Gaming loop: check every 750ms for low-latency subtitle detection
 
                 val image = imageReader?.acquireLatestImage() ?: continue
                 try {
@@ -123,12 +123,14 @@ class ScreenCaptureService : Service() {
                     )
                     bitmap.copyPixelsFromBuffer(buffer)
 
-                    // Focus on subtitle region: bottom 35% of the screen
-                    val cropY = (image.height * 0.65).toInt()
-                    val cropHeight = (image.height * 0.35).toInt()
+                    // Focus on subtitle region: bottom 32% of the screen (PlayStation standard)
+                    val cropY = (image.height * 0.68).toInt()
+                    val cropHeight = (image.height * 0.32).toInt()
                     val croppedBitmap = Bitmap.createBitmap(bitmap, 0, cropY, image.width, cropHeight)
 
-                    processFrame(croppedBitmap)
+                    // Pre-process frame with gaming contrast filter (from overlay-translator)
+                    val enhancedBitmap = enhanceContrastForGameSubtitles(croppedBitmap)
+                    processFrame(enhancedBitmap)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 } finally {
@@ -136,6 +138,21 @@ class ScreenCaptureService : Service() {
                 }
             }
         }
+    }
+
+    private fun enhanceContrastForGameSubtitles(src: Bitmap): Bitmap {
+        val bmp = Bitmap.createBitmap(src.width, src.height, Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(bmp)
+        val paint = android.graphics.Paint()
+        val colorMatrix = android.graphics.ColorMatrix(floatArrayOf(
+            1.8f, 0f, 0f, 0f, -75f,
+            0f, 1.8f, 0f, 0f, -75f,
+            0f, 0f, 1.8f, 0f, -75f,
+            0f, 0f, 0f, 1.0f, 0f
+        ))
+        paint.colorFilter = android.graphics.ColorMatrixColorFilter(colorMatrix)
+        canvas.drawBitmap(src, 0f, 0f, paint)
+        return bmp
     }
 
     private fun processFrame(bitmap: Bitmap) {
