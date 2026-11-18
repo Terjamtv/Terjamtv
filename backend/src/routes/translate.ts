@@ -26,10 +26,7 @@ translateRoute.post("/", async (c) => {
   const targetLang = body.target_lang || "ar";
   const deviceId = body.device_id;
 
-  const supabase = createUserClient(c.env, authHeader);
-  const adminClient = createAdminClient(c.env);
-
-  // Demo mode fallback when Supabase URL is placeholder
+  // Demo mode fallback when Supabase URL is placeholder or empty
   const isDemo = !c.env.SUPABASE_URL || c.env.SUPABASE_URL.includes("your-project-id");
 
   if (isDemo) {
@@ -57,6 +54,9 @@ translateRoute.post("/", async (c) => {
       });
     }
   }
+
+  const supabase = createUserClient(c.env, authHeader);
+  const adminClient = createAdminClient(c.env);
 
   // 1. Get user details from JWT
   const { data: { user }, error: userError } = await supabase.auth.getUser();
