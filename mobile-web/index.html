@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -115,8 +116,15 @@
     }
 
     @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.8; }
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.8;
+      }
     }
 
     /* Live Feed Box */
@@ -189,6 +197,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <!-- Header -->
@@ -221,35 +230,35 @@
   <div class="card">
     <div class="card-title">
       <span>🎙️</span>
-      <span>الترجمة الصوتية المباشرة للتلفزيون</span>
+      <span>الترجمة المباشرة بالعامية السعودية 🇸🇦</span>
     </div>
 
     <!-- Language Selector Dropdown -->
     <div style="margin-bottom: 14px; background: #0b1120; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
-      <label style="font-size: 13px; color: var(--text-muted); font-weight: 700;">لغة حوار التلفزيون:</label>
+      <label style="font-size: 13px; color: var(--text-muted); font-weight: 700;">وش جالس تشوف؟</label>
       <select id="sourceLangSelect" onchange="onLanguageChanged()" style="background: #1e293b; color: #fff; border: 1px solid var(--border); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 13px; outline: none;">
-        <option value="en" selected>🇬🇧 الإنجليزية (English)</option>
-        <option value="tr">🇹🇷 التركية (Turkish - مسلسلات)</option>
-        <option value="ko">🇰🇷 الكورية (Korean - K-Drama)</option>
-        <option value="es">🇪🇸 الإسبانية (Spanish)</option>
-        <option value="fr">🇫🇷 الفرنسية (French)</option>
-        <option value="de">🇩🇪 الألمانية (German)</option>
-        <option value="ja">🇯🇵 اليابانية (Japanese - أنمي)</option>
+        <option value="en" selected>🇬🇧 أفلام ومسلسلات إنجليزية</option>
+        <option value="tr">🇹🇷 مسلسلات تركية</option>
+        <option value="ko">🇰🇷 دراما كورية (K-Drama)</option>
+        <option value="es">🇪🇸 مسلسلات إسبانية</option>
+        <option value="fr">🇫🇷 فرنسية</option>
+        <option value="de">🇩🇪 ألمانية</option>
+        <option value="ja">🇯🇵 أنمي ياباني</option>
       </select>
     </div>
 
     <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
-      اضغط الزر ودع هاتفك يستمع للكلام الصادر من التلفزيون ليترجمه مباشرة باللغة العربية على الشاشة!
+      اضغط الزر وخلي جوالك يسمع صوت التلفزيون، وبيرجم لك الحوار مباشرة بالعامية السعودية على الشاشة!
     </p>
 
     <button id="btnToggleSpeech" class="btn-action" onclick="toggleSpeechRecognition()">
       <span>🎙️</span>
-      <span id="btnSpeechText">بدء الاستماع وترجمة الشاشة</span>
+      <span id="btnSpeechText">شغّل الاستماع وترجمة الشاشة الحين</span>
     </button>
 
     <div class="live-feed">
-      <div class="live-en" id="liveEn">Say something or play TV audio...</div>
-      <div class="live-ar" id="liveAr">الترجمة الفورية ستظهر هنا وعلى التلفزيون...</div>
+      <div class="live-en" id="liveEn">تكلم أو شغل صوت التلفزيون...</div>
+      <div class="live-ar" id="liveAr">الترجمة بالعامية السعودية بتنزل هنا وعلى شاشتك...</div>
     </div>
   </div>
 
@@ -271,26 +280,29 @@
   <div class="card" style="border-color: #3b82f6;">
     <div class="card-title">
       <span>🎟️</span>
-      <span>شحن كود تفعيل نقدي</span>
+      <span>معك كرت تفعيل نقدي؟</span>
     </div>
     <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
-      إذا اشتريت كرت تفعيل نقداً من أحد الموزعين، أدخل الكود هنا لتفعيل باقتك فوراً:
+      إذا شريت كرت تفعيل كاش من الموزع، حط الكود هنا وابشر بتفعيل باقتك فوراً:
     </p>
     <div style="display: flex; gap: 8px;">
-      <input type="text" id="voucherCodeInput" placeholder="مثال: TRTV-PRO-1M-XXXXXX" style="flex: 1; background: #0b1120; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; font-weight: 700; text-transform: uppercase; font-size: 14px; text-align: center; letter-spacing: 1px;">
-      <button class="btn-action" style="width: auto; padding: 12px 20px; font-size: 14px;" onclick="redeemVoucher()">تفعيل</button>
+      <input type="text" id="voucherCodeInput" placeholder="اكتب الكود: TRTV-PRO-..."
+        style="flex: 1; background: #0b1120; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; font-weight: 700; text-transform: uppercase; font-size: 14px; text-align: center; letter-spacing: 1px;">
+      <button class="btn-action" style="width: auto; padding: 12px 20px; font-size: 14px;"
+        onclick="redeemVoucher()">تفعيل الكرت</button>
     </div>
     <div id="voucherStatusMsg" style="font-size: 13px; margin-top: 8px; text-align: center;"></div>
   </div>
 
   <!-- Cash Payment / Renewal via WhatsApp -->
   <div class="card whatsapp-card">
-    <div style="font-size: 16px; font-weight: 800; color: #ffffff;">💵 تجديد الاشتراك نقداً</div>
+    <div style="font-size: 16px; font-weight: 800; color: #ffffff;">💵 تبي تجدد اشتراكك كاش؟</div>
     <p style="font-size: 13px; color: #d1fae5; margin-top: 4px;">
-      لتفعيل أو تجديد باقتك، تواصل مع المشرف مباشرة عبر واتساب واستلم كود التفعيل فوراً بعد الدفع النقدي.
+      تواصل معنا واتساب وادفع بالطريقة اللي تريحك (كاش، تحويل بنكي، STC Pay)، وفالك طيب بيجيك كرت التفعيل فوراً.
     </p>
-    <a href="https://wa.me/?text=مرحباً،%20أريد%20تجديد%20اشتراكي%20في%20خدمة%20ترجمة%20التلفزيون%20TranslateTV" target="_blank" class="btn-whatsapp">
-      <span>💬 تواصل عبر واتساب للتجديد نقداً</span>
+    <a href="https://wa.me/?text=هلا%20والله،%20أبي%20أجدد%20اشتراكي%20في%20TranslateTV%20كاش"
+      target="_blank" class="btn-whatsapp">
+      <span>💬 كلمنا واتساب وادفع كاش وفالك طيب</span>
     </a>
   </div>
 
@@ -405,7 +417,7 @@
 
       recognition.onend = () => {
         if (isListening) {
-          try { recognition.start(); } catch(e){}
+          try { recognition.start(); } catch (e) { }
         }
       };
     }
@@ -479,4 +491,5 @@
     }
   </script>
 </body>
+
 </html>

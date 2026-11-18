@@ -1,3 +1,4 @@
+declare const process: any;
 import { serve } from "@hono/node-server";
 import app from "./index";
 
