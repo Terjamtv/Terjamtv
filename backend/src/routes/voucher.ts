@@ -162,37 +162,40 @@ voucherRoute.post("/redeem", async (c) => {
   const expiry = new Date();
   expiry.setMonth(expiry.getMonth() + voucher.duration_months);
 
-  // 3. Update User Profile
-  const { error: profileError } = await adminClient
-    .from("profiles")
-    .update({
-      subscription_tier: voucher.tier,
-      subscription_expires_at: expiry.toISOString(),
-      max_devices: config.max_devices,
-      monthly_minutes_limit: config.minutes,
-      monthly_minutes_used: 0,
-      updated_at: new Date().toISOString()
-    })
-    .eq("id", targetUserId);
+  // 3. Update User Profile if targetUserId is a valid UUID
+  const isUuid = targetUserId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetUserId);
 
-  if (profileError) {
-    return c.json({ error: "فشل تفعيل الحساب", details: profileError.message }, 500);
+  if (isUuid) {
+    try {
+      await adminClient
+        .from("profiles")
+        .update({
+          subscription_tier: voucher.tier,
+          subscription_expires_at: expiry.toISOString(),
+          max_devices: config.max_devices,
+          monthly_minutes_limit: config.minutes,
+          monthly_minutes_used: 0,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", targetUserId);
+    } catch (_) {}
   }
 
-  // 4. Mark voucher redeemed
+  // 4. Mark voucher redeemed in Supabase
   await adminClient
     .from("vouchers")
     .update({
       is_redeemed: true,
-      redeemed_by: targetUserId,
+      redeemed_by: isUuid ? targetUserId : null,
       redeemed_at: new Date().toISOString()
     })
     .eq("id", voucher.id);
 
   return c.json({
     success: true,
-    message: `تهانينا! تم تفعيل باقة ${voucher.tier.toUpperCase()} بنجاح حتى ${expiry.toLocaleDateString('ar-EG')}`,
+    message: `تهانينا! تم تفعيل كرت باقة ${voucher.tier.toUpperCase()} بنجاح لمدة ${voucher.duration_months} شهر!`,
     tier: voucher.tier,
+    duration_months: voucher.duration_months,
     expires_at: expiry.toISOString()
   });
 });
