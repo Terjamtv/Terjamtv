@@ -215,6 +215,18 @@ pairRoute.post("/claim", async (c) => {
     tier: tier
   });
 
+  // Also persist pairing record to Supabase translation_cache so ALL edge isolates know it's paired
+  if (c.env.SUPABASE_URL && c.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      await adminClient.from("translation_cache").insert({
+        source_text: code,
+        source_lang: `PAIR:${code}`,
+        target_lang: "paired",
+        translated_text: userName
+      });
+    } catch (_) {}
+  }
+
   return c.json({
     success: true,
     message: "Device successfully paired!",
@@ -246,15 +258,7 @@ pairRoute.get("/status", async (c) => {
     }
   }
 
-  if (dev) {
-    if (!dev.is_active) {
-      return c.json({
-        status: "pending",
-        paired: false,
-        pairing_code: dev.pairing_code
-      });
-    }
-
+  if (dev && dev.is_active) {
     return c.json({
       status: "paired",
       paired: true,
@@ -264,6 +268,30 @@ pairRoute.get("/status", async (c) => {
       user_name: dev.user_name || "مشترك TranslateTV",
       tier: dev.tier || "pro"
     });
+  }
+
+  // Check shared Supabase pair record
+  if (c.env.SUPABASE_URL && c.env.SUPABASE_SERVICE_ROLE_KEY && code) {
+    try {
+      const adminClient = createAdminClient(c.env);
+      const { data } = await adminClient
+        .from("translation_cache")
+        .select("source_text, translated_text")
+        .eq("source_lang", `PAIR:${code.trim().toUpperCase()}`)
+        .limit(1);
+
+      if (data && data.length > 0) {
+        return c.json({
+          status: "paired",
+          paired: true,
+          device_id: code,
+          device_name: "شاشة التلفزيون",
+          user_id: "guest-user",
+          user_name: data[0].translated_text || "مشترك TranslateTV",
+          tier: "pro"
+        });
+      }
+    } catch (_) {}
   }
 
   const adminClient = createAdminClient(c.env);

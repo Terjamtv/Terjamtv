@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { Env } from "../lib/supabase";
+import { Env, createAdminClient } from "../lib/supabase";
 
 export const relayRoute = new Hono<{ Bindings: Env }>();
 
@@ -39,6 +39,29 @@ relayRoute.post("/subtitle", async (c) => {
   // Also store in demo-tv-device as global fallback so any active TV demo receives it immediately
   latestSubtitles.set("demo-tv-device", packet);
 
+  // Persist to Supabase so ALL Cloudflare edge isolates share this subtitle packet
+  if (c.env.SUPABASE_URL && c.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const adminClient = createAdminClient(c.env);
+      await adminClient.from("translation_cache").insert([
+        {
+          source_text: body.original || "",
+          source_lang: `RELAY:${key.toUpperCase()}`,
+          target_lang: "ar",
+          translated_text: body.translated
+        },
+        {
+          source_text: body.original || "",
+          source_lang: "RELAY:DEMO-TV-DEVICE",
+          target_lang: "ar",
+          translated_text: body.translated
+        }
+      ]);
+    } catch (e) {
+      console.warn("Relay Supabase write error:", e);
+    }
+  }
+
   return c.json({
     success: true,
     packet_id: packet.id
@@ -61,9 +84,38 @@ relayRoute.get("/latest", async (c) => {
     packet = latestSubtitles.get(code.trim().toUpperCase());
   }
 
-  // Fallback: If not found specifically for this device/code, check "demo-tv-device"
+  // Fallback: Check local demo store
   if (!packet) {
     packet = latestSubtitles.get("demo-tv-device");
+  }
+
+  // If not found in isolate RAM, check Supabase translation_cache (shared across all edge isolates!)
+  if (!packet && c.env.SUPABASE_URL && c.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const adminClient = createAdminClient(c.env);
+      const searchKeys: string[] = ["RELAY:DEMO-TV-DEVICE"];
+      if (code) searchKeys.unshift(`RELAY:${code.trim().toUpperCase()}`);
+      if (deviceId) searchKeys.unshift(`RELAY:${deviceId.trim().toUpperCase()}`);
+
+      const { data } = await adminClient
+        .from("translation_cache")
+        .select("id, source_text, translated_text, created_at")
+        .in("source_lang", searchKeys)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (data && data.length > 0) {
+        const item = data[0];
+        packet = {
+          id: item.id,
+          original: item.source_text,
+          translated: item.translated_text,
+          timestamp: new Date(item.created_at).getTime()
+        };
+      }
+    } catch (e) {
+      console.warn("Relay Supabase read error:", e);
+    }
   }
 
   if (!packet) {
