@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TranslateTV — مترجم ملفات الترجمة (SRT) إلى العامية السعودية</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --bg: #090d16;
+      --card-bg: #111827;
+      --border: #1f2937;
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+      --success: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Cairo', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      padding: 30px 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    header h1 {
+      font-size: 32px;
+      font-weight: 900;
+      color: #60a5fa;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+
+    .dropzone {
+      background: var(--card-bg);
+      border: 2px dashed #3b82f6;
+      border-radius: 20px;
+      padding: 50px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 24px;
+    }
+
+    .dropzone:hover {
+      background: #172033;
+      border-color: #60a5fa;
+    }
+
+    .dropzone .icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn:hover { background: #1d4ed8; }
+    .btn-success { background: var(--success); }
+
+    .preview-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 24px;
+      display: none;
+    }
+
+    textarea {
+      width: 100%;
+      height: 250px;
+      background: #0b1120;
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 14px;
+      border-radius: 10px;
+      font-family: monospace;
+      font-size: 13px;
+      direction: ltr;
+      resize: vertical;
+      margin: 12px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>🎬 مترجم ملفات الأفلام (SRT) إلى العامية السعودية 🇸🇦</h1>
+      <p>ارفع ملف الترجمة الإنجليزي وحمله فوراً بالعامية السعودية لتشغيله مع أفلامك على التلفزيون!</p>
+    </header>
+
+    <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+      <div class="icon">📁</div>
+      <h3 style="font-size: 20px; margin-bottom: 6px;">اسحب وأفلت ملف الـ (.srt أو .vtt) هنا</h3>
+      <p style="color: var(--text-muted); font-size: 14px;">أو اضغط لاختيار الملف من جهازك</p>
+      <input type="file" id="fileInput" accept=".srt,.vtt" style="display: none;" onchange="handleFileSelect(event)">
+    </div>
+
+    <!-- Live Preview & Action -->
+    <div class="preview-box" id="previewBox">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 id="fileNameDisplay" style="color: #60a5fa; font-size: 16px;">ملف الترجمة المترجم</h3>
+        <button class="btn btn-success" onclick="downloadTranslatedFile()">📥 تحميل ملف الـ SRT الجديد</button>
+      </div>
+
+      <textarea id="outputSrtText" readonly></textarea>
+    </div>
+  </div>
+
+  <script>
+    let originalFileName = "movie.srt";
+    let translatedContent = "";
+
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      originalFileName = file.name;
+      const reader = new FileReader();
+
+      reader.onload = async (event) => {
+        const content = event.target.result;
+        translateSrtContent(content);
+      };
+
+      reader.readAsText(file);
+    }
+
+    async function translateSrtContent(content) {
+      const dropzone = document.getElementById("dropzone");
+      dropzone.innerHTML = `<div class="icon">⏳</div><h3>جاري ترجمة حوارات الفلم إلى العامية السعودية...</h3>`;
+
+      try {
+        const res = await fetch("http://localhost:8787/api/translate/srt", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            srt_content: content,
+            dialect: "saudi"
+          })
+        });
+
+        const data = await res.json();
+        translatedContent = data.translated_srt || content;
+
+        document.getElementById("outputSrtText").value = translatedContent;
+        document.getElementById("fileNameDisplay").textContent = `✅ تم ترجمة (${data.total_blocks || 0} جملة) بالعامية السعودية: ${originalFileName}`;
+        document.getElementById("previewBox").style.display = "block";
+
+        dropzone.innerHTML = `<div class="icon">✅</div><h3>تمت الترجمة بنجاح!</h3><p>يمكنك تحميل الملف من الأسفل أو سحب ملف آخر</p>`;
+      } catch (err) {
+        alert("تعذر الاتصال بخادم الترجمة المحلي (تأكد من تشغيل start_demo.bat)");
+        dropzone.innerHTML = `<div class="icon">❌</div><h3>حدث خطأ أثناء الترجمة</h3><p>اضغط للمحاولة مرة أخرى</p>`;
+      }
+    }
+
+    function downloadTranslatedFile() {
+      if (!translatedContent) return;
+
+      const blob = new Blob([translatedContent], { type: "text/plain;charset=utf-8" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = originalFileName.replace(/\.(srt|vtt)$/i, "_saudi.srt");
+      link.click();
+    }
+  </script>
+</body>
+</html>

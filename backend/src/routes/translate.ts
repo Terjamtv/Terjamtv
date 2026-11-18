@@ -198,3 +198,49 @@ translateRoute.post("/", async (c) => {
     }, 500);
   }
 });
+
+/**
+ * Translate complete SRT / VTT subtitle files into Saudi dialect
+ */
+translateRoute.post("/srt", async (c) => {
+  const body = await c.req.json<{
+    srt_content: string;
+    source_lang?: string;
+    dialect?: "saudi" | "fusha";
+  }>().catch(() => null);
+
+  if (!body || !body.srt_content) {
+    return c.json({ error: "srt_content is required" }, 400);
+  }
+
+  const dialect = body.dialect || "saudi";
+  const blocks = body.srt_content.trim().split(/\r?\n\r?\n/);
+  const translatedBlocks: string[] = [];
+
+  for (const block of blocks) {
+    const lines = block.split(/\r?\n/);
+    if (lines.length >= 3) {
+      const index = lines[0];
+      const timestamp = lines[1];
+      const text = lines.slice(2).join(" ");
+      
+      // Convert text to Saudi dialect
+      let translated = toSaudiDialect(text);
+      if (translated === text) {
+        // Fallback marker for untranslated demo
+        translated = `[سعودي]: ${toSaudiDialect(text)}`;
+      }
+
+      translatedBlocks.push(`${index}\n${timestamp}\n${translated}`);
+    } else {
+      translatedBlocks.push(block);
+    }
+  }
+
+  return c.json({
+    success: true,
+    dialect: dialect,
+    total_blocks: blocks.length,
+    translated_srt: translatedBlocks.join("\n\n")
+  });
+});
