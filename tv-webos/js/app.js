@@ -216,26 +216,18 @@ const LocalTM = {
     } catch (e) {
       this.dict = {};
     }
-    // Pre-seed with common PlayStation & GTA gaming dialogue
-    const seed = {
-      "mission passed": "تمت المهمة بنجاح",
-      "mission failed": "فشلت المهمة",
-      "wasted": "قُضي عليك",
-      "busted": "تم إلقاء القبض عليك",
-      "get in the car": "اركب السيارة",
-      "get out": "انزل / اخرج",
-      "follow me": "اتبعني",
-      "lets go": "هيا بنا / يلا مشينا",
-      "watch out": "انتبه / خذ حذرك",
-      "help me": "ساعدني / الفزعة",
-      "checkpoint": "نقطة حفظ",
-      "paused": "متوقف مؤقتاً",
-      "resume": "استئناف اللعب",
-      "press any button to continue": "اضغط أي زر للمتابعة"
-    };
-    for (const [k, v] of Object.entries(seed)) {
-      if (!this.dict[k]) this.dict[k] = v;
-    }
+    // Load bundled game dictionary JSON if available
+    fetch("data/game_dictionary_ar.json")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.entries) {
+          for (const [k, v] of Object.entries(data.entries)) {
+            const norm = this.normalize(k);
+            if (!this.dict[norm]) this.dict[norm] = v;
+          }
+        }
+      })
+      .catch(() => null);
   },
   normalize(text) {
     return (text || "").toLowerCase().trim().replace(/[^a-zA-Z0-9 ]/g, "").trim();

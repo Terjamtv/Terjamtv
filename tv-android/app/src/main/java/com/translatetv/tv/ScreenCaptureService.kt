@@ -67,39 +67,32 @@ class ScreenCaptureService : Service() {
     }
 
     private fun initTranslationMemory() {
-        // Pre-seed local translation memory with top gaming & PlayStation dialogues
-        val seed = mapOf(
-            "mission passed" to "تمت المهمة بنجاح",
-            "mission failed" to "فشلت المهمة",
-            "wasted" to "قُضي عليك",
-            "busted" to "تم إلقاء القبض عليك",
-            "get in the car" to "اركب السيارة",
-            "get out of the car" to "انزل من السيارة",
-            "follow me" to "اتبعني",
-            "lets go" to "هيا بنا / يلا مشينا",
-            "get down" to "انبطح / احذر",
-            "watch out" to "انتبه / خذ حذرك",
-            "take cover" to "احتمِ / اختبئ",
-            "enemy spotted" to "تم رصد العدو",
-            "help me" to "ساعدني / الفزعة",
-            "hold on" to "تمسك جيداً / انتظر",
-            "what are you doing" to "ماذا تفعل؟",
-            "are you crazy" to "هل جننت؟",
-            "call the police" to "اتصل بالشرطة",
-            "checkpoint" to "نقطة حفظ",
-            "press x to continue" to "اضغط X للمتابعة",
-            "press any button to continue" to "اضغط أي زر للمتابعة",
-            "loading" to "جاري التحميل...",
-            "paused" to "متوقف مؤقتاً",
-            "resume" to "استئناف اللعب",
-            "restart" to "إعادة المحاولة",
-            "quit to main menu" to "الخروج للقائمة الرئيسية",
-            "settings" to "الإعدادات",
-            "inventory" to "الحقيبة / العتاد",
-            "map" to "الخريطة"
-        )
-        for ((k, v) in seed) {
-            translationMemory.put(normalizeKey(k), v)
+        try {
+            val jsonString = assets.open("game_dictionary_ar.json").bufferedReader().use { it.readText() }
+            val root = JSONObject(jsonString)
+            val entries = root.optJSONObject("entries")
+            if (entries != null) {
+                val keys = entries.keys()
+                while (keys.hasNext()) {
+                    val k = keys.next()
+                    val v = entries.getString(k)
+                    translationMemory.put(normalizeKey(k), v)
+                }
+            }
+        } catch (e: Exception) {
+            // Fallback to basic map if assets fail to load
+            val seed = mapOf(
+                "mission passed" to "تمت المهمة بنجاح",
+                "mission failed" to "فشلت المهمة",
+                "wasted" to "قُضي عليك",
+                "busted" to "تم إلقاء القبض عليك",
+                "get in the car" to "اركب السيارة",
+                "follow me" to "اتبعني",
+                "lets go" to "هيا بنا / يلا مشينا"
+            )
+            for ((k, v) in seed) {
+                translationMemory.put(normalizeKey(k), v)
+            }
         }
     }
 
