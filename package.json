@@ -4,6 +4,6 @@
   "description": "TerjamTV - Smart TV Real-time Translation Platform",
   "private": true,
   "scripts": {
-    "build": "echo 'Static build completed successfully'"
+    "build": "node -e \"const fs = require('fs'); const path = require('path'); function copyDir(src, dest) { if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true }); for (const entry of fs.readdirSync(src, { withFileTypes: true })) { const s = path.join(src, entry.name); const d = path.join(dest, entry.name); if (entry.isDirectory()) { copyDir(s, d); } else { fs.copyFileSync(s, d); } } } copyDir('mobile-web', 'website/remote'); copyDir('tv-webos', 'website/tv'); copyDir('admin', 'website/admin'); console.log('Static assets synced to website/ successfully!');\""
   }
 }

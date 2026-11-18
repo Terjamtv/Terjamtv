@@ -1,0 +1,22 @@
+{
+  "name": "TranslateTV Remote & Companion",
+  "short_name": "TranslateTV",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#090d16",
+  "theme_color": "#2563eb",
+  "description": "Smart TV real-time audio and screen translation remote controller",
+  "icons": [
+    {
+      "src": "../tv-webos/icon.png",
+      "sizes": "80x80",
+      "type": "image/png"
+    },
+    {
+      "src": "../tv-webos/largeIcon.png",
+      "sizes": "130x130",
+      "type": "image/png"
+    }
+  ]
+}

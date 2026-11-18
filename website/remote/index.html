@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TranslateTV — مساعد الشاشة والتحكم</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-glow: rgba(37, 99, 235, 0.4);
+      --bg: #090d16;
+      --card-bg: #131b2e;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #23304a;
+      --success: #10b981;
+      --danger: #ef4444;
+      --gold: #fbbf24;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Cairo', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand h1 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #60a5fa;
+    }
+
+    .tv-badge {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Big Action Buttons */
+    .btn-action {
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 18px;
+      border-radius: 14px;
+      font-size: 17px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 20px var(--primary-glow);
+      transition: all 0.2s;
+    }
+
+    .btn-action.active {
+      background: #dc2626;
+      box-shadow: 0 4px 20px rgba(220, 38, 38, 0.4);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.8;
+      }
+    }
+
+    /* Live Feed Box */
+    .live-feed {
+      background: #0b1120;
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 14px;
+      min-height: 80px;
+      border: 1px solid var(--border);
+    }
+
+    .live-en {
+      font-size: 13px;
+      color: var(--text-muted);
+      direction: ltr;
+      text-align: left;
+      margin-bottom: 6px;
+      min-height: 20px;
+    }
+
+    .live-ar {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--gold);
+      min-height: 28px;
+    }
+
+    /* Controls Grid */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .btn-control {
+      background: #1e293b;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 12px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .btn-control:active {
+      background: #334155;
+    }
+
+    /* WhatsApp Renewal Card */
+    .whatsapp-card {
+      background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+      border: 1px solid #059669;
+    }
+
+    .btn-whatsapp {
+      background: #25d366;
+      color: #000;
+      font-weight: 800;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 15px;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">
+      <span style="font-size: 24px;">📺</span>
+      <h1>TranslateTV Remote</h1>
+    </div>
+    <div class="tv-badge" id="tvStatusBadge">
+      <span style="font-size: 10px;">🟢</span>
+      <span id="tvStatusText">متصل بالشاشة</span>
+    </div>
+  </div>
+
+  <!-- Subscription Status Banner -->
+  <div class="card" style="padding: 14px 18px; background: rgba(30, 58, 138, 0.4); border-color: #2563eb;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <div style="font-size: 12px; color: #93c5fd;">نوع الاشتراك الحالي</div>
+        <div style="font-size: 18px; font-weight: 800; color: #ffffff;" id="userTier">باقة برو (PRO)</div>
+      </div>
+      <div style="text-align: left;">
+        <div style="font-size: 12px; color: #93c5fd;">الحالة</div>
+        <div style="font-size: 14px; font-weight: 700; color: #4ade80;">نشط وغير محدود ✅</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Feature: Live Speech Audio Translation -->
+  <div class="card">
+    <div class="card-title">
+      <span>🎙️</span>
+      <span>الترجمة المباشرة بالعامية السعودية 🇸🇦</span>
+    </div>
+
+    <!-- Language Selector Dropdown -->
+    <div
+      style="margin-bottom: 14px; background: #0b1120; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+      <label style="font-size: 13px; color: var(--text-muted); font-weight: 700;">وش جالس تشوف؟</label>
+      <select id="sourceLangSelect" onchange="onLanguageChanged()"
+        style="background: #1e293b; color: #fff; border: 1px solid var(--border); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 13px; outline: none;">
+        <option value="en" selected>🇬🇧 أفلام ومسلسلات إنجليزية</option>
+        <option value="tr">🇹🇷 مسلسلات تركية</option>
+        <option value="ko">🇰🇷 دراما كورية (K-Drama)</option>
+        <option value="es">🇪🇸 مسلسلات إسبانية</option>
+        <option value="fr">🇫🇷 فرنسية</option>
+        <option value="de">🇩🇪 ألمانية</option>
+        <option value="ja">🇯🇵 أنمي ياباني</option>
+      </select>
+    </div>
+
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+      اضغط الزر وخلي جوالك يسمع صوت التلفزيون، وبيرجم لك الحوار مباشرة بالعامية السعودية على الشاشة!
+    </p>
+
+    <button id="btnToggleSpeech" class="btn-action" onclick="toggleSpeechRecognition()">
+      <span>🎙️</span>
+      <span id="btnSpeechText">شغّل الاستماع وترجمة الشاشة الحين</span>
+    </button>
+
+    <div class="live-feed">
+      <div class="live-en" id="liveEn">تكلم أو شغل صوت التلفزيون...</div>
+      <div class="live-ar" id="liveAr">الترجمة بالعامية السعودية بتنزل هنا وعلى شاشتك...</div>
+    </div>
+  </div>
+
+  <!-- TV Remote Settings -->
+  <div class="card">
+    <div class="card-title">
+      <span>🎛️</span>
+      <span>تحكم الشاشة والتلفزيون</span>
+    </div>
+    <div class="controls-grid">
+      <button class="btn-control" onclick="sendTvAction('font_larger')">تكبير الخط (+)</button>
+      <button class="btn-control" onclick="sendTvAction('font_smaller')">تصغير الخط (-)</button>
+      <button class="btn-control" onclick="sendTvAction('toggle_position')">موضع النص (أعلى/أسفل)</button>
+      <button class="btn-control" onclick="sendTvAction('clear_subtitles')">مسح الترجمة</button>
+    </div>
+  </div>
+
+  <!-- Voucher Redeem Card -->
+  <div class="card" style="border-color: #3b82f6;">
+    <div class="card-title">
+      <span>🎟️</span>
+      <span>معك كرت تفعيل نقدي؟</span>
+    </div>
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+      إذا شريت كرت تفعيل كاش من الموزع، حط الكود هنا وابشر بتفعيل باقتك فوراً:
+    </p>
+    <div style="display: flex; gap: 8px;">
+      <input type="text" id="voucherCodeInput" placeholder="اكتب الكود: TRTV-PRO-..."
+        style="flex: 1; background: #0b1120; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; font-weight: 700; text-transform: uppercase; font-size: 14px; text-align: center; letter-spacing: 1px;">
+      <button class="btn-action" style="width: auto; padding: 12px 20px; font-size: 14px;"
+        onclick="redeemVoucher()">تفعيل الكرت</button>
+    </div>
+    <div id="voucherStatusMsg" style="font-size: 13px; margin-top: 8px; text-align: center;"></div>
+  </div>
+
+  <!-- Cash Payment / Renewal via WhatsApp -->
+  <div class="card whatsapp-card">
+    <div style="font-size: 16px; font-weight: 800; color: #ffffff;">💵 تبي تجدد اشتراكك كاش؟</div>
+    <p style="font-size: 13px; color: #d1fae5; margin-top: 4px;">
+      تواصل معنا واتساب وادفع بالطريقة اللي تريحك (كاش، تحويل بنكي، STC Pay)، وفالك طيب بيجيك كرت التفعيل فوراً.
+    </p>
+    <a href="https://wa.me/?text=هلا%20والله،%20أبي%20أجدد%20اشتراكي%20في%20TranslateTV%20كاش"
+      target="_blank" class="btn-whatsapp">
+      <span>💬 كلمنا واتساب وادفع كاش وفالك طيب</span>
+    </a>
+  </div>
+
+  <script>
+    // Extract query parameters from URL: ?code=PAIR-XXXX&device_id=YYYY
+    const urlParams = new URLSearchParams(window.location.search);
+    const deviceId = urlParams.get("device_id") || localStorage.getItem("translatetv_paired_device") || "demo-tv-device";
+    const pairingCode = urlParams.get("code");
+    const apiBase = window.location.origin; // or your backend url
+
+    let isListening = false;
+    let recognition = null;
+    let currentSourceLang = "en";
+
+    const LANG_MAP = {
+      en: "en-US",
+      tr: "tr-TR",
+      ko: "ko-KR",
+      es: "es-ES",
+      fr: "fr-FR",
+      de: "de-DE",
+      ja: "ja-JP"
+    };
+
+    function onLanguageChanged() {
+      const select = document.getElementById("sourceLangSelect");
+      currentSourceLang = select.value;
+      if (recognition) {
+        recognition.lang = LANG_MAP[currentSourceLang] || "en-US";
+        if (isListening) {
+          recognition.stop();
+          setTimeout(() => { try { recognition.start(); } catch (e) { } }, 300);
+        }
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      if (deviceId) {
+        localStorage.setItem("translatetv_paired_device", deviceId);
+      }
+      initSpeechRecognition();
+
+      // Register PWA service worker
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("./sw.js").catch(() => null);
+      }
+    });
+
+    function initSpeechRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("متصفح هاتفك لا يدعم المايكروفون التلقائي. يرجى استخدام متصفح Chrome أو Safari.");
+        return;
+      }
+
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = false;
+      recognition.lang = "en-US"; // Listen to English dialogue from TV
+
+      recognition.onresult = async (event) => {
+        const lastResultIndex = event.results.length - 1;
+        const englishSentence = event.results[lastResultIndex][0].transcript.trim();
+
+        if (englishSentence) {
+          document.getElementById("liveEn").textContent = englishSentence;
+          document.getElementById("liveAr").textContent = "جاري الترجمة بالعربية...";
+
+          // Translate via Backend AI
+          try {
+            const res = await fetch(`${apiBase}/api/translate`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                // In demo, fallback or pass mock auth
+                "Authorization": "Bearer DEMO_USER_TOKEN"
+              },
+              body: JSON.stringify({
+                text: englishSentence,
+                source_lang: currentSourceLang,
+                target_lang: "ar",
+                device_id: deviceId
+              })
+            });
+
+            const data = await res.json();
+            const arabicText = data.translated_text || data.translation || "—";
+            document.getElementById("liveAr").textContent = arabicText;
+
+            // Relay directly to the TV screen via backend!
+            await fetch(`${apiBase}/api/relay/subtitle`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                device_id: deviceId,
+                original: englishSentence,
+                translated: arabicText
+              })
+            });
+          } catch (e) {
+            console.error("Translation relay error:", e);
+          }
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.warn("Speech recognition error:", event.error);
+        if (event.error === 'not-allowed') {
+          alert("يرجى السماح بصلاحية المايكروفون لسماع صوت التلفزيون وترجمته.");
+        }
+      };
+
+      recognition.onend = () => {
+        if (isListening) {
+          try { recognition.start(); } catch (e) { }
+        }
+      };
+    }
+
+    function toggleSpeechRecognition() {
+      if (!recognition) {
+        initSpeechRecognition();
+        if (!recognition) return;
+      }
+
+      const btn = document.getElementById("btnToggleSpeech");
+      const btnText = document.getElementById("btnSpeechText");
+
+      if (!isListening) {
+        try {
+          recognition.start();
+          isListening = true;
+          btn.classList.add("active");
+          btnText.textContent = "⏹️ إيقاف الاستماع";
+          document.getElementById("liveEn").textContent = "جاري الاستماع لصوت التلفزيون...";
+        } catch (e) {
+          console.error(e);
+        }
+      } else {
+        isListening = false;
+        recognition.stop();
+        btn.classList.remove("active");
+        btnText.textContent = "🎙️ بدء الاستماع وترجمة الشاشة";
+      }
+    }
+
+    async function sendTvAction(action) {
+      alert("تم إرسال أمر (" + action + ") إلى الشاشة!");
+    }
+
+    async function redeemVoucher() {
+      const codeInput = document.getElementById("voucherCodeInput");
+      const msg = document.getElementById("voucherStatusMsg");
+      const code = codeInput.value.trim().toUpperCase();
+
+      if (!code) {
+        alert("يرجى إدخال كود التفعيل");
+        return;
+      }
+
+      msg.style.color = "#93c5fd";
+      msg.textContent = "جاري التحقق من الكود وتفعيل الباقة...";
+
+      try {
+        const res = await fetch(`${apiBase}/api/voucher/redeem`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: code, user_id: "demo-user-123" })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          msg.style.color = "#4ade80";
+          msg.textContent = "✅ " + data.message;
+          document.getElementById("userTier").textContent = `باقة ${data.tier.toUpperCase()}`;
+          codeInput.value = "";
+          alert("🎉 " + data.message);
+        } else {
+          msg.style.color = "#ef4444";
+          msg.textContent = "❌ " + (data.error || "كود غير صالح");
+        }
+      } catch (e) {
+        msg.style.color = "#ef4444";
+        msg.textContent = "❌ تعذر الاتصال بالخادم";
+      }
+    }
+  </script>
+</body>
+
+</html>
