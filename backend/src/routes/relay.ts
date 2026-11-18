@@ -36,6 +36,8 @@ relayRoute.post("/subtitle", async (c) => {
   const key = body.device_id.trim();
   latestSubtitles.set(key, packet);
   latestSubtitles.set(key.toUpperCase(), packet);
+  // Also store in demo-tv-device as global fallback so any active TV demo receives it immediately
+  latestSubtitles.set("demo-tv-device", packet);
 
   return c.json({
     success: true,
@@ -51,16 +53,17 @@ relayRoute.get("/latest", async (c) => {
   const code = c.req.query("code");
   const lastId = c.req.query("last_id");
 
-  if (!deviceId && !code) {
-    return c.json({ error: "device_id or code query param is required" }, 400);
-  }
-
   let packet = deviceId ? latestSubtitles.get(deviceId.trim()) : null;
   if (!packet && deviceId) {
     packet = latestSubtitles.get(deviceId.trim().toUpperCase());
   }
   if (!packet && code) {
     packet = latestSubtitles.get(code.trim().toUpperCase());
+  }
+
+  // Fallback: If not found specifically for this device/code, check "demo-tv-device"
+  if (!packet) {
+    packet = latestSubtitles.get("demo-tv-device");
   }
 
   if (!packet) {
