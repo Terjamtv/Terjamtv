@@ -37,8 +37,8 @@ class MainActivity : AppCompatActivity() {
     private val client = OkHttpClient()
     private val scope = CoroutineScope(Dispatchers.Main + Job())
 
-    // Replace with your Cloudflare API url in production
-    private val API_BASE = "http://10.0.2.2:8787" 
+    // Live Cloudflare Worker production API
+    private val API_BASE = "https://translatetv-api.honda-druid.workers.dev" 
 
     private lateinit var ivQrCode: ImageView
     private lateinit var tvPairingCode: TextView

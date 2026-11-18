@@ -121,34 +121,49 @@ function startPollingPairingStatus() {
   if (pollTimer) clearInterval(pollTimer);
 
   pollTimer = setInterval(async () => {
-    if (!currentDeviceId) return;
+    if (!currentDeviceId && !currentPairingCode) return;
 
     try {
-      const res = await fetch(`${CONFIG.apiBase}/api/pair/status?device_id=${currentDeviceId}`);
+      // 1. Check pairing status
+      const res = await fetch(`${CONFIG.apiBase}/api/pair/status?device_id=${currentDeviceId || ''}&code=${currentPairingCode || ''}`);
       if (res.ok) {
         const data = await res.json();
         if (data.paired) {
           clearInterval(pollTimer);
           activateTranslationScreen(data);
+          return;
+        }
+      }
+
+      // 2. Also check if subtitles are arriving for this device from mobile
+      const relayRes = await fetch(`${CONFIG.apiBase}/api/relay/latest?device_id=${currentDeviceId || ''}&code=${currentPairingCode || ''}`);
+      if (relayRes.ok) {
+        const rData = await relayRes.json();
+        if (rData.has_update && rData.packet) {
+          clearInterval(pollTimer);
+          activateTranslationScreen({ user_name: "الهاتف المقترن", tier: "PRO" });
+          displaySubtitle(rData.packet.original, rData.packet.translated);
+          return;
         }
       }
     } catch (err) {
       console.warn("Polling error:", err);
     }
-  }, CONFIG.pollIntervalMs);
+  }, 1500);
 }
 
 /**
  * 3. Activate Translation Display Screen
  */
 function activateTranslationScreen(deviceData) {
+  if (pollTimer) clearInterval(pollTimer);
   showScreen("screenTranslation");
 
-  connectedUserName.textContent = deviceData.user_name || "المستخدم";
-  connectedTier.textContent = (deviceData.tier || "FREE").toUpperCase();
+  connectedUserName.textContent = deviceData.user_name || "شاشة العرض المباشر";
+  connectedTier.textContent = (deviceData.tier || "PRO").toUpperCase();
 
   // Show temporary hint
-  showToast("تم الاقتران بنجاح! جاهز لعرض الترجمة");
+  showToast("تم الاتصال بنجاح! جاهز لعرض الترجمة");
 
   // Auto hide top bar after 6 seconds
   setTimeout(() => {
@@ -167,10 +182,10 @@ function startLiveSubtitleListener() {
 
   // Poll relay server for new subtitles sent from the phone companion
   setInterval(async () => {
-    if (!currentDeviceId) return;
+    if (!currentDeviceId && !currentPairingCode) return;
 
     try {
-      const url = `${CONFIG.apiBase}/api/relay/latest?device_id=${currentDeviceId}${lastPacketId ? `&last_id=${lastPacketId}` : ''}`;
+      const url = `${CONFIG.apiBase}/api/relay/latest?device_id=${currentDeviceId || ''}&code=${currentPairingCode || ''}${lastPacketId ? `&last_id=${lastPacketId}` : ''}`;
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
@@ -182,7 +197,7 @@ function startLiveSubtitleListener() {
     } catch (e) {
       // ignore network jitter
     }
-  }, 750); // check every 750ms for instant subtitle updates
+  }, 600); // check every 600ms for instant subtitle updates
 }
 
 function displaySubtitle(original, translated) {

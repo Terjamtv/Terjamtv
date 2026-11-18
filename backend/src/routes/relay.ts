@@ -33,7 +33,9 @@ relayRoute.post("/subtitle", async (c) => {
     timestamp: Date.now()
   };
 
-  latestSubtitles.set(body.device_id, packet);
+  const key = body.device_id.trim();
+  latestSubtitles.set(key, packet);
+  latestSubtitles.set(key.toUpperCase(), packet);
 
   return c.json({
     success: true,
@@ -46,13 +48,20 @@ relayRoute.post("/subtitle", async (c) => {
  */
 relayRoute.get("/latest", async (c) => {
   const deviceId = c.req.query("device_id");
+  const code = c.req.query("code");
   const lastId = c.req.query("last_id");
 
-  if (!deviceId) {
-    return c.json({ error: "device_id query param is required" }, 400);
+  if (!deviceId && !code) {
+    return c.json({ error: "device_id or code query param is required" }, 400);
   }
 
-  const packet = latestSubtitles.get(deviceId);
+  let packet = deviceId ? latestSubtitles.get(deviceId.trim()) : null;
+  if (!packet && deviceId) {
+    packet = latestSubtitles.get(deviceId.trim().toUpperCase());
+  }
+  if (!packet && code) {
+    packet = latestSubtitles.get(code.trim().toUpperCase());
+  }
 
   if (!packet) {
     return c.json({ has_update: false });

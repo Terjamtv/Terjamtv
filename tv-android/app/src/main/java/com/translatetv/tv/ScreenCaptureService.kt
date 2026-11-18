@@ -50,7 +50,7 @@ class ScreenCaptureService : Service() {
     private val httpClient = OkHttpClient()
     private val scope = CoroutineScope(Dispatchers.IO + Job())
 
-    private var apiBase: String = "http://10.0.2.2:8787"
+    private var apiBase: String = "https://translatetv-api.honda-druid.workers.dev"
     private var deviceId: String? = null
     private var lastRecognizedText: String = ""
 
