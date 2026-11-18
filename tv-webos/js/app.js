@@ -241,14 +241,48 @@ function disconnectDevice() {
   startPairingFlow();
 }
 
+// Saudi Dialogue Simulation Samples
+let simTimer = null;
+let isSimulating = false;
+const SAUDI_MOVIE_QUOTES = [
+  { en: "Don't worry, everything is under control.", ar: "لا تشيل هم، كل شي تحت السيطرة والأمور زينة." },
+  { en: "What are you doing here? Tell me what happened.", ar: "وش جالس تسوي هنا؟ علمني وش السالفة صدق!" },
+  { en: "Why so serious? Let's put a smile on that face.", ar: "وش فيك شادها ومكتم كذا؟ وسع صدرك وابتسم يا رجال!" },
+  { en: "I will be back, don't go anywhere.", ar: "راجع لكم قريب، لا تروحون بعيد!" },
+  { en: "It's not about the money, it's about sending a message.", ar: "الموضوع مو موضوع قروش، نبي نوصل رسالة بس!" },
+  { en: "May the force be with you my brother.", ar: "الله يوفقك ويسدد خطاك يا كفو!" },
+  { en: "Look at this! This is absolutely unbelievable!", ar: "شوف هذا بالله! والله شي ما يصدقه العقل مرة!" }
+];
+
+function toggleDialogueSimulation() {
+  isSimulating = !isSimulating;
+  if (isSimulating) {
+    let index = 0;
+    const runNext = () => {
+      const item = SAUDI_MOVIE_QUOTES[index % SAUDI_MOVIE_QUOTES.length];
+      displaySubtitle(item.en, item.ar);
+      index++;
+    };
+    runNext();
+    simTimer = setInterval(runNext, 4500);
+    showToast("بدأت محاكاة جمل الأفلام بالعامية السعودية");
+  } else {
+    if (simTimer) clearInterval(simTimer);
+    showToast("تم إيقاف المحاكاة");
+  }
+}
+
 function setupRemoteListeners() {
   window.addEventListener("keydown", (e) => {
     // webOS Remote keycodes
     const KEY_ENTER = 13;
     const KEY_BACK = 461; // webOS back key
     const KEY_MENU = 18;
+    const KEY_NUM_1 = 49; // Number 1 on remote
 
-    if (e.keyCode === KEY_ENTER) {
+    if (e.keyCode === KEY_NUM_1) {
+      toggleDialogueSimulation();
+    } else if (e.keyCode === KEY_ENTER) {
       // Toggle settings modal
       if (screenTranslation.classList.contains("active")) {
         settingsMenu.style.display = settingsMenu.style.display === "none" ? "block" : "none";
