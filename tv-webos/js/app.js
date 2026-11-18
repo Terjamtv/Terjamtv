@@ -206,6 +206,8 @@ function startLiveSubtitleListener() {
   }, 600); // check every 600ms for instant subtitle updates
 }
 
+let subtitleClearTimeout = null;
+
 function displaySubtitle(original, translated) {
   originalTextEl.textContent = original;
   translatedTextEl.textContent = translated;
@@ -216,6 +218,12 @@ function displaySubtitle(original, translated) {
   if (playerAr) {
     playerAr.textContent = translated;
   }
+
+  // Smart Subtitle Hold: Auto-hide after 4.5 seconds if dialogue ends
+  if (subtitleClearTimeout) clearTimeout(subtitleClearTimeout);
+  subtitleClearTimeout = setTimeout(() => {
+    subtitleOverlay.style.display = "none";
+  }, 4500);
 }
 
 function switchToPlayerMode() {

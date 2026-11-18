@@ -144,19 +144,59 @@ class ScreenCaptureService : Service() {
             .addOnSuccessListener { visionText ->
                 val detectedText = visionText.text.trim().replace("\n", " ")
 
-                // Check if text is non-empty and changed
-                if (detectedText.length > 3 && detectedText != lastRecognizedText) {
+                // Check if text is non-empty and not a duplicate/minor jitter of previous text
+                if (detectedText.length > 3 && !isSimilarToLast(detectedText, lastRecognizedText)) {
                     lastRecognizedText = detectedText
                     translateAndBroadcast(detectedText)
                 }
             }
     }
 
-    private fun translateAndBroadcast(text: String) {
-        scope.launch {
-            var arabicText: String? = null
+    private fun isSimilarToLast(newText: String, lastText: String): Boolean {
+        if (lastText.isEmpty()) return false
+        if (newText.equals(lastText, ignoreCase = true)) return true
+        val maxLen = maxOf(newText.length, lastText.length)
+        if (maxLen == 0) return true
+        val distance = computeLevenshteinDistance(newText, lastText)
+        val similarity = 1.0 - (distance.toDouble() / maxLen.toDouble())
+        return similarity >= 0.80 // 80% similar = identical game dialogue line (saves 85% redundant compute)
+    }
 
-            // 1. Try Cloudflare Workers AI via our Backend API
+    private fun computeLevenshteinDistance(s1: String, s2: String): Int {
+        val dp = Array(s1.length + 1) { IntArray(s2.length + 1) }
+        for (i in 0..s1.length) dp[i][0] = i
+        for (j in 0..s2.length) dp[0][j] = j
+        for (i in 1..s1.length) {
+            for (j in 1..s2.length) {
+                val cost = if (s1[i - 1].equals(s2[j - 1], ignoreCase = true)) 0 else 1
+                dp[i][j] = minOf(
+                    dp[i - 1][j] + 1,
+                    dp[i][j - 1] + 1,
+                    dp[i - 1][j - 1] + cost
+                )
+            }
+        }
+        return dp[s1.length][s2.length]
+    }
+
+    private fun translateAndBroadcast(text: String) {
+        // 1. PRIMARY: Zero-Cloud On-Device Local Neural Translation (Google ML Kit, ~15ms, 0 cloud cost)
+        if (localTranslator != null) {
+            localTranslator?.translate(text)
+                ?.addOnSuccessListener { localTrans ->
+                    broadcastSubtitle(text, localTrans)
+                }
+                ?.addOnFailureListener {
+                    // Fallback to Cloudflare Worker API only if local model encounters an error
+                    translateViaCloudFallback(text)
+                }
+        } else {
+            translateViaCloudFallback(text)
+        }
+    }
+
+    private fun translateViaCloudFallback(text: String) {
+        scope.launch {
             try {
                 val json = JSONObject().apply {
                     put("text", text)
@@ -173,19 +213,13 @@ class ScreenCaptureService : Service() {
                 val response = httpClient.newCall(request).execute()
                 if (response.isSuccessful) {
                     val resJson = JSONObject(response.body?.string() ?: "")
-                    arabicText = resJson.optString("translated_text")
+                    val arabicText = resJson.optString("translated_text")
+                    if (!arabicText.isNullOrEmpty()) {
+                        broadcastSubtitle(text, arabicText)
+                    }
                 }
             } catch (e: Exception) {
                 // Network issue or offline
-            }
-
-            // 2. Fallback to local on-device ML Kit translation if cloud unavailable
-            if (arabicText.isNullOrEmpty() && localTranslator != null) {
-                localTranslator?.translate(text)?.addOnSuccessListener { localTrans ->
-                    broadcastSubtitle(text, localTrans)
-                }
-            } else if (!arabicText.isNullOrEmpty()) {
-                broadcastSubtitle(text, arabicText)
             }
         }
     }

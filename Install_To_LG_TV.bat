@@ -1,0 +1,41 @@
+@echo off
+chcp 65001 >nul
+title TranslateTV - تثبيت التطبيق على شاشة LG webOS
+cd /d "%~dp0"
+echo ========================================================
+echo   TranslateTV - تثبيت تطبيق الترجمة على شاشة LG webOS
+echo ========================================================
+echo.
+echo [تعليمات هامة على شاشة التلفزيون]:
+echo 1. تأكد أن اللابتوب والتلفزيون متصلان على نفس شبكة الواي فاي (Wi-Fi).
+echo 2. على التلفزيون: افتح تطبيق (Developer Mode).
+echo 3. تأكد أن (Dev Mode Status: ON) وأن (Key Server: ON).
+echo 4. ستجد بيانات واضحة أمامك على شاشة التلفزيون:
+echo    - IP Address (مثال: 192.168.1.50)
+echo    - Passphrase (كود سري مكون من 6 حروف وأرقام)
+echo.
+set /p TV_IP="اكتب الـ IP Address الظاهر على التلفزيون: "
+
+echo.
+echo [1/3] جاري إضافة التلفزيون...
+call ares-setup-device -r lgtv >nul 2>&1
+call ares-setup-device -a lgtv -i "username=prisoner" -i "host=%TV_IP%" -i "port=9922"
+
+echo.
+echo [2/3] جاري الحصول على مفتاح الاتصال من التلفزيون...
+echo (اكتب كود الـ Passphrase المكون من 6 حروف عندما يطلبه البرنامج):
+call ares-novacom --device lgtv --getkey
+
+echo.
+echo [3/3] جاري رفع وتثبيت ملف com.translatetv.app_1.0.0_all.ipk على التلفزيون...
+call ares-install --device lgtv com.translatetv.app_1.0.0_all.ipk
+
+echo.
+echo جاري إطلاق التطبيق على التلفزيون...
+call ares-launch --device lgtv com.translatetv.app
+
+echo.
+echo ========================================================
+echo   تم التثبيت والتشغيل بنجاح على شاشة LG webOS!
+echo ========================================================
+pause

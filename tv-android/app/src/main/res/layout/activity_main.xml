@@ -76,17 +76,17 @@
             android:id="@+id/btnStartTranslation"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="بدء الترجمة الفورية والشاشة العائمة"
+            android:text="🎮 بدء وضع ترجمة البلايستيشن والألعاب (PlayStation Mode)"
             android:textSize="18sp"
             android:textStyle="bold"
             android:backgroundTint="#2563EB"
             android:textColor="#FFFFFF"
-            android:paddingStart="24dp"
-            android:paddingEnd="24dp"
-            android:paddingTop="12dp"
-            android:paddingBottom="12dp"
+            android:paddingStart="28dp"
+            android:paddingEnd="28dp"
+            android:paddingTop="14dp"
+            android:paddingBottom="14dp"
             android:layout_marginTop="24dp"
-            android:enabled="false" />
+            android:enabled="true" />
 
     </LinearLayout>
 
