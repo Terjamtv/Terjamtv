@@ -375,7 +375,21 @@ function setupRemoteListeners() {
       if (settingsMenu.style.display === "block") {
         settingsMenu.style.display = "none";
         e.preventDefault();
+      } else {
+        // Safe Exit: clean close and return 100% control to the TV
+        if (window.webOS && window.webOS.platformBack) {
+          window.webOS.platformBack();
+        } else {
+          window.close();
+        }
       }
     }
+  });
+
+  // Safe Cleanup: clear all timers when TV app is closed or switched
+  window.addEventListener("unload", () => {
+    if (pollTimer) clearInterval(pollTimer);
+    if (simTimer) clearInterval(simTimer);
+    if (subtitleClearTimeout) clearTimeout(subtitleClearTimeout);
   });
 }

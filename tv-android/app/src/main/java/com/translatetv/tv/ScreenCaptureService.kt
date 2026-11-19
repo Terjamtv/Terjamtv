@@ -105,7 +105,16 @@ class ScreenCaptureService : Service() {
         localTranslator?.downloadModelIfNeeded()
     }
 
+    companion object {
+        const val ACTION_STOP_SERVICE = "com.translatetv.tv.ACTION_STOP"
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.action == ACTION_STOP_SERVICE) {
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
         val notification = createNotification()
         startForeground(NOTIF_ID, notification)
 
@@ -344,12 +353,42 @@ class ScreenCaptureService : Service() {
     }
 
     private fun createNotification(): Notification {
+        val stopIntent = Intent(this, ScreenCaptureService::class.java).apply {
+            action = ACTION_STOP_SERVICE
+        }
+        val stopPendingIntent = android.app.PendingIntent.getService(
+            this,
+            0,
+            stopIntent,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT
+            } else {
+                android.app.PendingIntent.FLAG_UPDATE_CURRENT
+            }
+        )
+
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("TranslateTV نشط")
-            .setContentText("جاري التقاط وترجمة ما يظهر على الشاشة للعربية...")
+            .setContentTitle("TranslateTV نشط بأمان")
+            .setContentText("الترجمة الفورية قيد التشغيل بأمان تام على الشاشة")
             .setSmallIcon(android.R.drawable.ic_menu_camera)
             .setPriority(NotificationCompat.PRIORITY_LOW)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "إيقاف الترجمة", stopPendingIntent)
             .build()
+    }
+
+    override fun onLowMemory() {
+        super.onLowMemory()
+        // RAM Guard: Evict cache immediately if TV system experiences memory pressure
+        translationMemory.evictAll()
+        System.gc()
+    }
+
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        if (level >= TRIM_MEMORY_RUNNING_LOW) {
+            translationMemory.evictAll()
+            System.gc()
+        }
     }
 
     override fun onDestroy() {
@@ -358,6 +397,10 @@ class ScreenCaptureService : Service() {
         mediaProjection?.stop()
         imageReader?.close()
         localTranslator?.close()
+        // Stop overlay service cleanly so no leftover views remain on the TV screen
+        try {
+            stopService(Intent(this, TranslationOverlayService::class.java))
+        } catch (ignored: Exception) {}
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
