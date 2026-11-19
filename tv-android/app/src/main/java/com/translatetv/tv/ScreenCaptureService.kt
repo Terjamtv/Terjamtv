@@ -54,12 +54,14 @@ class ScreenCaptureService : Service() {
     private var deviceId: String? = null
     private var lastRecognizedText: String = ""
     private val translationMemory = android.util.LruCache<String, String>(3000)
+    private val pendingUsbVault = java.util.concurrent.ConcurrentHashMap<String, String>()
 
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
         initLocalOfflineTranslator()
         initTranslationMemory()
+        startUsbVaultSyncLoop()
     }
 
     private fun normalizeKey(text: String): String {
@@ -92,6 +94,101 @@ class ScreenCaptureService : Service() {
             )
             for ((k, v) in seed) {
                 translationMemory.put(normalizeKey(k), v)
+            }
+        }
+
+        // Auto-load learned entries from plugged USB flash drive (Zero user interaction required)
+        loadUsbVault()
+    }
+
+    private fun getUsbVaultDir(): java.io.File? {
+        try {
+            val dirs = getExternalFilesDirs(null)
+            if (dirs != null && dirs.size > 1) {
+                for (i in 1 until dirs.size) {
+                    val d = dirs[i]
+                    if (d != null && d.canWrite()) {
+                        return d
+                    }
+                }
+            }
+        } catch (ignored: Exception) {}
+        return null
+    }
+
+    private fun loadUsbVault() {
+        val dir = getUsbVaultDir() ?: return
+        try {
+            val vaultFile = java.io.File(dir, "translatetv_vault.json")
+            if (vaultFile.exists() && vaultFile.canRead()) {
+                val content = vaultFile.readText()
+                val root = JSONObject(content)
+                val entries = root.optJSONObject("entries")
+                if (entries != null) {
+                    val keys = entries.keys()
+                    var count = 0
+                    while (keys.hasNext()) {
+                        val k = keys.next()
+                        val v = entries.getString(k)
+                        translationMemory.put(normalizeKey(k), v)
+                        count++
+                    }
+                    android.util.Log.i("TranslateTV", "USB Vault: Successfully loaded $count learned words from USB flash drive")
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.w("TranslateTV", "USB Vault read warning: ${e.message}")
+        }
+    }
+
+    private fun recordToVault(key: String, value: String) {
+        if (key.isBlank() || value.isBlank()) return
+        if (pendingUsbVault.size < 1000) {
+            pendingUsbVault[key] = value
+        }
+    }
+
+    private fun flushUsbVault() {
+        if (pendingUsbVault.isEmpty()) return
+        val dir = getUsbVaultDir() ?: return
+        try {
+            val vaultFile = java.io.File(dir, "translatetv_vault.json")
+            val root = if (vaultFile.exists()) {
+                try { JSONObject(vaultFile.readText()) } catch (e: Exception) { JSONObject() }
+            } else {
+                JSONObject()
+            }
+            val entries = root.optJSONObject("entries") ?: JSONObject().also { root.put("entries", it) }
+
+            val it = pendingUsbVault.entries.iterator()
+            var added = 0
+            while (it.hasNext()) {
+                val entry = it.next()
+                entries.put(entry.key, entry.value)
+                it.remove()
+                added++
+            }
+            if (added > 0) {
+                root.put("updated_at", System.currentTimeMillis())
+                root.put("total_entries", entries.length())
+
+                val tempFile = java.io.File(dir, "translatetv_vault.tmp")
+                tempFile.writeText(root.toString(2))
+                if (tempFile.exists()) {
+                    tempFile.renameTo(vaultFile)
+                    android.util.Log.i("TranslateTV", "USB Vault: Auto-flushed $added entries to USB drive (${entries.length()} total)")
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.w("TranslateTV", "USB Vault flush warning: ${e.message}")
+        }
+    }
+
+    private fun startUsbVaultSyncLoop() {
+        scope.launch(Dispatchers.IO) {
+            while (isActive) {
+                delay(30_000) // Auto-flush to USB every 30 seconds
+                flushUsbVault()
             }
         }
     }
@@ -299,6 +396,7 @@ class ScreenCaptureService : Service() {
             localTranslator?.translate(text)
                 ?.addOnSuccessListener { localTrans ->
                     translationMemory.put(norm, localTrans)
+                    recordToVault(norm, localTrans)
                     broadcastSubtitle(text, localTrans)
                 }
                 ?.addOnFailureListener {
@@ -331,6 +429,7 @@ class ScreenCaptureService : Service() {
                     val arabicText = resJson.optString("translated_text")
                     if (!arabicText.isNullOrEmpty()) {
                         translationMemory.put(normKey, arabicText)
+                        recordToVault(normKey, arabicText)
                         broadcastSubtitle(text, arabicText)
                     }
                 }
@@ -401,6 +500,7 @@ class ScreenCaptureService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        flushUsbVault()
         virtualDisplay?.release()
         mediaProjection?.stop()
         imageReader?.close()
