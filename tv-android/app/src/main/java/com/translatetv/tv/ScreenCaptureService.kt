@@ -134,6 +134,8 @@ class ScreenCaptureService : Service() {
     }
 
     private var lastRegionHash: Long = 0L
+    private var adaptiveDelayMs: Long = 650L
+    private var quietFrameCount: Int = 0
 
     private fun setupVirtualDisplay() {
         val metrics = resources.displayMetrics
@@ -157,7 +159,7 @@ class ScreenCaptureService : Service() {
             android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND)
 
             while (isActive) {
-                delay(750) // Gaming loop
+                delay(adaptiveDelayMs) // Dynamic Adaptive Pacing: 650ms during action, 1500ms when silent
 
                 val image = imageReader?.acquireLatestImage() ?: continue
                 var bitmap: Bitmap? = null
@@ -186,9 +188,15 @@ class ScreenCaptureService : Service() {
                     // 1. Fast Hash Check: If visual pixels haven't changed, skip OCR entirely (<0.01ms CPU)
                     val currentHash = computeFastRegionHash(croppedBitmap)
                     if (currentHash == lastRegionHash) {
+                        quietFrameCount++
+                        if (quietFrameCount > 4) {
+                            adaptiveDelayMs = 1500L // Cool-down to 1500ms during silent gameplay (saves 60% CPU/heat)
+                        }
                         continue
                     }
                     lastRegionHash = currentHash
+                    quietFrameCount = 0
+                    adaptiveDelayMs = 650L // Snap back to ultra-fast 650ms responsiveness the moment text appears!
 
                     // 2. Pre-process frame with gaming contrast filter
                     enhancedBitmap = enhanceContrastForGameSubtitles(croppedBitmap)
