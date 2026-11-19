@@ -6,6 +6,7 @@ import { pairRoute } from "./routes/pair";
 import { adminRoute } from "./routes/admin";
 import { relayRoute } from "./routes/relay";
 import { voucherRoute } from "./routes/voucher";
+import { authRoute } from "./routes/auth";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -52,6 +53,7 @@ app.route("/api/pair", pairRoute);
 app.route("/api/admin", adminRoute);
 app.route("/api/relay", relayRoute);
 app.route("/api/voucher", voucherRoute);
+app.route("/api/auth", authRoute);
 
 // 404 Handler
 app.notFound((c) => {

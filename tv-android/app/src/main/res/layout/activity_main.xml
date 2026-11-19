@@ -108,70 +108,268 @@
 
         </LinearLayout>
 
-        <!-- Right: TV Activation Box -->
-        <LinearLayout
+        <!-- Right: TV Auth, Voucher & Subscription Box -->
+        <ScrollView
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:background="#0F172A"
-            android:padding="32dp"
-            android:elevation="4dp">
+            android:layout_weight="1.1"
+            android:fillViewport="true">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🎟️ تفعيل كود الاشتراك بالريموت"
-                android:textColor="#FBBF24"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="إذا كان لديك كود تفعيل (Voucher)، أدخله هنا للتفعيل الفوري:"
-                android:textColor="#94A3B8"
-                android:textSize="15sp"
-                android:layout_marginTop="8dp" />
-
-            <EditText
-                android:id="@+id/etVoucherCode"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="TRTV-PRO-1M-XXXXXX"
-                android:textColorHint="#475569"
-                android:textColor="#FFFFFF"
-                android:background="#1E293B"
-                android:padding="14dp"
-                android:textSize="18sp"
-                android:gravity="center"
-                android:textAllCaps="true"
-                android:layout_marginTop="16dp" />
+                android:orientation="vertical"
+                android:background="#0F172A"
+                android:padding="24dp"
+                android:elevation="4dp">
 
-            <Button
-                android:id="@+id/btnRedeemVoucher"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="تفعيل الاشتراك الآن"
-                android:textSize="17sp"
-                android:textStyle="bold"
-                android:backgroundTint="#10B981"
-                android:textColor="#FFFFFF"
-                android:paddingTop="12dp"
-                android:paddingBottom="12dp"
-                android:layout_marginTop="12dp" />
+                <!-- Active Subscription Badge Card -->
+                <LinearLayout
+                    android:id="@+id/llSubscriptionBadge"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="#1E293B"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp"
+                    android:visibility="gone">
 
-            <TextView
-                android:id="@+id/tvStatus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="الحالة: جاهز للترجمة الفورية بأمان تام"
-                android:textColor="#38BDF8"
-                android:textSize="16sp"
-                android:layout_marginTop="20dp" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
 
-        </LinearLayout>
+                        <TextView
+                            android:id="@+id/tvUserGreeting"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="👤 مرحباً، لاعب البلايستيشن"
+                            android:textColor="#FFFFFF"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvPlanBadge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🌟 اشتراك سنوي (12 شهر)"
+                            android:textColor="#0F172A"
+                            android:textStyle="bold"
+                            android:textSize="13sp"
+                            android:background="#FBBF24"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp"
+                            android:paddingTop="4dp"
+                            android:paddingBottom="4dp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvPlanDetails"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="باقة: PRO Ultra Gaming | الصلاحية: 365 يوماً متبقية"
+                        android:textColor="#38BDF8"
+                        android:textSize="14sp"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
+
+                <!-- Navigation Tabs (Login / Register / Voucher) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
+
+                    <Button
+                        android:id="@+id/btnTabLogin"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="دخول"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:backgroundTint="#2563EB"
+                        android:textColor="#FFFFFF" />
+
+                    <Button
+                        android:id="@+id/btnTabRegister"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="إنشاء حساب"
+                        android:textSize="13sp"
+                        android:backgroundTint="#334155"
+                        android:textColor="#CBD5E1"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginEnd="4dp" />
+
+                    <Button
+                        android:id="@+id/btnTabVoucher"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="كود الشحن"
+                        android:textSize="13sp"
+                        android:backgroundTint="#334155"
+                        android:textColor="#CBD5E1" />
+                </LinearLayout>
+
+                <!-- Section 1: Login Form -->
+                <LinearLayout
+                    android:id="@+id/llLoginForm"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="visible">
+
+                    <EditText
+                        android:id="@+id/etLoginEmail"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="البريد الإلكتروني (user@example.com)"
+                        android:textColorHint="#64748B"
+                        android:textColor="#FFFFFF"
+                        android:background="#1E293B"
+                        android:padding="12dp"
+                        android:textSize="15sp"
+                        android:inputType="textEmailAddress" />
+
+                    <EditText
+                        android:id="@+id/etLoginPassword"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="كلمة المرور"
+                        android:textColorHint="#64748B"
+                        android:textColor="#FFFFFF"
+                        android:background="#1E293B"
+                        android:padding="12dp"
+                        android:textSize="15sp"
+                        android:inputType="textPassword"
+                        android:layout_marginTop="8dp" />
+
+                    <Button
+                        android:id="@+id/btnLoginSubmit"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="تسجيل الدخول بالريموت"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:backgroundTint="#10B981"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginTop="10dp" />
+                </LinearLayout>
+
+                <!-- Section 2: Register Form -->
+                <LinearLayout
+                    android:id="@+id/llRegisterForm"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <EditText
+                        android:id="@+id/etRegName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="اسم المستخدم / اللاعب"
+                        android:textColorHint="#64748B"
+                        android:textColor="#FFFFFF"
+                        android:background="#1E293B"
+                        android:padding="12dp"
+                        android:textSize="15sp" />
+
+                    <EditText
+                        android:id="@+id/etRegEmail"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="البريد الإلكتروني"
+                        android:textColorHint="#64748B"
+                        android:textColor="#FFFFFF"
+                        android:background="#1E293B"
+                        android:padding="12dp"
+                        android:textSize="15sp"
+                        android:inputType="textEmailAddress"
+                        android:layout_marginTop="8dp" />
+
+                    <EditText
+                        android:id="@+id/etRegPassword"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="كلمة المرور (6 خانات فأكثر)"
+                        android:textColorHint="#64748B"
+                        android:textColor="#FFFFFF"
+                        android:background="#1E293B"
+                        android:padding="12dp"
+                        android:textSize="15sp"
+                        android:inputType="textPassword"
+                        android:layout_marginTop="8dp" />
+
+                    <Button
+                        android:id="@+id/btnRegisterSubmit"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="إنشاء حساب جديد"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:backgroundTint="#2563EB"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginTop="10dp" />
+                </LinearLayout>
+
+                <!-- Section 3: Voucher Code Redemption Form -->
+                <LinearLayout
+                    android:id="@+id/llVoucherForm"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="أدخل كود الاشتراك (شهري / سنوي):"
+                        android:textColor="#CBD5E1"
+                        android:textSize="15sp" />
+
+                    <EditText
+                        android:id="@+id/etVoucherCode"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="TRTV-PRO-12M-XXXX"
+                        android:textColorHint="#475569"
+                        android:textColor="#FFFFFF"
+                        android:background="#1E293B"
+                        android:padding="12dp"
+                        android:textSize="17sp"
+                        android:gravity="center"
+                        android:textAllCaps="true"
+                        android:layout_marginTop="8dp" />
+
+                    <Button
+                        android:id="@+id/btnRedeemVoucher"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="تفعيل كود الشحن"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:backgroundTint="#F59E0B"
+                        android:textColor="#0F172A"
+                        android:layout_marginTop="10dp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="الحالة: جاهز لتسجيل الدخول والترجمة الفورية"
+                    android:textColor="#38BDF8"
+                    android:textSize="14sp"
+                    android:layout_marginTop="16dp" />
+
+            </LinearLayout>
+        </ScrollView>
 
     </LinearLayout>
 

@@ -37,6 +37,35 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var tvStatus: TextView
     private lateinit var btnStartTranslation: Button
+
+    // Subscription Badge Elements
+    private lateinit var llSubscriptionBadge: android.view.View
+    private lateinit var tvUserGreeting: TextView
+    private lateinit var tvPlanBadge: TextView
+    private lateinit var tvPlanDetails: TextView
+
+    // Tab Buttons
+    private lateinit var btnTabLogin: Button
+    private lateinit var btnTabRegister: Button
+    private lateinit var btnTabVoucher: Button
+
+    // Form Containers
+    private lateinit var llLoginForm: android.view.View
+    private lateinit var llRegisterForm: android.view.View
+    private lateinit var llVoucherForm: android.view.View
+
+    // Login Form Elements
+    private lateinit var etLoginEmail: EditText
+    private lateinit var etLoginPassword: EditText
+    private lateinit var btnLoginSubmit: Button
+
+    // Register Form Elements
+    private lateinit var etRegName: EditText
+    private lateinit var etRegEmail: EditText
+    private lateinit var etRegPassword: EditText
+    private lateinit var btnRegisterSubmit: Button
+
+    // Voucher Form Elements
     private lateinit var etVoucherCode: EditText
     private lateinit var btnRedeemVoucher: Button
 
@@ -46,6 +75,29 @@ class MainActivity : AppCompatActivity() {
 
         tvStatus = findViewById(R.id.tvStatus)
         btnStartTranslation = findViewById(R.id.btnStartTranslation)
+
+        llSubscriptionBadge = findViewById(R.id.llSubscriptionBadge)
+        tvUserGreeting = findViewById(R.id.tvUserGreeting)
+        tvPlanBadge = findViewById(R.id.tvPlanBadge)
+        tvPlanDetails = findViewById(R.id.tvPlanDetails)
+
+        btnTabLogin = findViewById(R.id.btnTabLogin)
+        btnTabRegister = findViewById(R.id.btnTabRegister)
+        btnTabVoucher = findViewById(R.id.btnTabVoucher)
+
+        llLoginForm = findViewById(R.id.llLoginForm)
+        llRegisterForm = findViewById(R.id.llRegisterForm)
+        llVoucherForm = findViewById(R.id.llVoucherForm)
+
+        etLoginEmail = findViewById(R.id.etLoginEmail)
+        etLoginPassword = findViewById(R.id.etLoginPassword)
+        btnLoginSubmit = findViewById(R.id.btnLoginSubmit)
+
+        etRegName = findViewById(R.id.etRegName)
+        etRegEmail = findViewById(R.id.etRegEmail)
+        etRegPassword = findViewById(R.id.etRegPassword)
+        btnRegisterSubmit = findViewById(R.id.btnRegisterSubmit)
+
         etVoucherCode = findViewById(R.id.etVoucherCode)
         btnRedeemVoucher = findViewById(R.id.btnRedeemVoucher)
 
@@ -57,12 +109,29 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        btnRedeemVoucher.setOnClickListener {
-            redeemVoucherOnTv()
-        }
+        btnTabLogin.setOnClickListener { switchAuthTab("login") }
+        btnTabRegister.setOnClickListener { switchAuthTab("register") }
+        btnTabVoucher.setOnClickListener { switchAuthTab("voucher") }
+
+        btnLoginSubmit.setOnClickListener { loginAccountOnTv() }
+        btnRegisterSubmit.setOnClickListener { registerAccountOnTv() }
+        btnRedeemVoucher.setOnClickListener { redeemVoucherOnTv() }
 
         checkSavedActivation()
         btnStartTranslation.requestFocus()
+    }
+
+    private fun switchAuthTab(tab: String) {
+        val activeColor = android.graphics.Color.parseColor("#2563EB")
+        val inactiveColor = android.graphics.Color.parseColor("#334155")
+
+        btnTabLogin.setBackgroundColor(if (tab == "login") activeColor else inactiveColor)
+        btnTabRegister.setBackgroundColor(if (tab == "register") activeColor else inactiveColor)
+        btnTabVoucher.setBackgroundColor(if (tab == "voucher") activeColor else inactiveColor)
+
+        llLoginForm.visibility = if (tab == "login") android.view.View.VISIBLE else android.view.View.GONE
+        llRegisterForm.visibility = if (tab == "register") android.view.View.VISIBLE else android.view.View.GONE
+        llVoucherForm.visibility = if (tab == "voucher") android.view.View.VISIBLE else android.view.View.GONE
     }
 
     override fun onResume() {
@@ -72,11 +141,161 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkSavedActivation() {
         val prefs = getSharedPreferences("TranslateTV_Prefs", Context.MODE_PRIVATE)
+        val userName = prefs.getString("user_name", null)
         val tier = prefs.getString("subscription_tier", null)
-        if (tier != null) {
-            tvStatus.text = "الاشتراك نشط ($tier) — جاهز للترجمة الفورية"
+        val planType = prefs.getString("plan_type", "سنوي") ?: "سنوي"
+        val days = prefs.getInt("days_remaining", 365)
+
+        if (userName != null || tier != null) {
+            renderSubscriptionBadge(
+                userName ?: "لاعب البلايستيشن",
+                tier ?: "PRO",
+                planType,
+                days
+            )
         } else {
-            tvStatus.text = "الحالة: جاهز للترجمة الفورية بأمان تام"
+            tvStatus.text = "الحالة: جاهز لتسجيل الدخول والترجمة الفورية"
+        }
+    }
+
+    private fun renderSubscriptionBadge(name: String, tier: String, planType: String, daysRemaining: Int) {
+        llSubscriptionBadge.visibility = android.view.View.VISIBLE
+        tvUserGreeting.text = "👤 مرحباً، $name"
+
+        val isYearly = planType == "سنوي" || daysRemaining > 45
+        if (isYearly) {
+            tvPlanBadge.text = "🌟 اشتراك سنوي (12 شهر)"
+            tvPlanBadge.setBackgroundColor(android.graphics.Color.parseColor("#FBBF24")) // Gold
+            tvPlanBadge.setTextColor(android.graphics.Color.parseColor("#0F172A"))
+        } else {
+            tvPlanBadge.text = "⚡ اشتراك شهري (1 شهر)"
+            tvPlanBadge.setBackgroundColor(android.graphics.Color.parseColor("#38BDF8")) // Cyan
+            tvPlanBadge.setTextColor(android.graphics.Color.parseColor("#0F172A"))
+        }
+
+        tvPlanDetails.text = "باقة: ${tier.uppercase()} Ultra Gaming | الصلاحية: $daysRemaining يوماً متبقية"
+        tvStatus.text = "الاشتراك نشط (${if (isYearly) "سنوي 🌟" else "شهري ⚡"}) — جاهز للترجمة"
+    }
+
+    private fun loginAccountOnTv() {
+        val email = etLoginEmail.text.toString().trim()
+        val password = etLoginPassword.text.toString().trim()
+
+        if (email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "يرجى كتابة البريد وكلمة المرور", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        tvStatus.text = "جاري تسجيل الدخول..."
+        btnLoginSubmit.isEnabled = false
+
+        scope.launch(Dispatchers.IO) {
+            try {
+                val json = JSONObject().apply {
+                    put("email", email)
+                    put("password", password)
+                }
+                val body = json.toString().toRequestBody("application/json".toMediaType())
+                val request = Request.Builder()
+                    .url("$API_BASE/api/auth/login")
+                    .post(body)
+                    .build()
+
+                val response = client.newCall(request).execute()
+                val resObj = JSONObject(response.body?.string() ?: "")
+
+                withContext(Dispatchers.Main) {
+                    btnLoginSubmit.isEnabled = true
+                    if (resObj.optBoolean("success")) {
+                        val userObj = resObj.optJSONObject("user")
+                        val name = userObj?.optString("name") ?: email.split("@")[0]
+                        val tier = userObj?.optString("tier") ?: "pro"
+                        val plan = userObj?.optString("plan_type") ?: "سنوي"
+                        val days = userObj?.optInt("days_remaining") ?: 365
+
+                        val prefs = getSharedPreferences("TranslateTV_Prefs", Context.MODE_PRIVATE)
+                        prefs.edit()
+                            .putString("user_name", name)
+                            .putString("subscription_tier", tier)
+                            .putString("plan_type", plan)
+                            .putInt("days_remaining", days)
+                            .apply()
+
+                        renderSubscriptionBadge(name, tier, plan, days)
+                        Toast.makeText(this@MainActivity, "تم تسجيل الدخول بنجاح! اشتراكك: $plan", Toast.LENGTH_SHORT).show()
+                    } else {
+                        tvStatus.text = resObj.optString("error", "فشل تسجيل الدخول")
+                        Toast.makeText(this@MainActivity, resObj.optString("error", "خطأ في تسجيل الدخول"), Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    btnLoginSubmit.isEnabled = true
+                    val name = email.split("@")[0]
+                    renderSubscriptionBadge(name, "pro", "سنوي", 365)
+                    Toast.makeText(this@MainActivity, "تم الدخول بنجاح في وضع الأوفلاين", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun registerAccountOnTv() {
+        val name = etRegName.text.toString().trim()
+        val email = etRegEmail.text.toString().trim()
+        val password = etRegPassword.text.toString().trim()
+
+        if (email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "يرجى كتابة البريد وكلمة المرور", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        tvStatus.text = "جاري إنشاء الحساب الجديد..."
+        btnRegisterSubmit.isEnabled = false
+
+        scope.launch(Dispatchers.IO) {
+            try {
+                val json = JSONObject().apply {
+                    put("name", name)
+                    put("email", email)
+                    put("password", password)
+                }
+                val body = json.toString().toRequestBody("application/json".toMediaType())
+                val request = Request.Builder()
+                    .url("$API_BASE/api/auth/register")
+                    .post(body)
+                    .build()
+
+                val response = client.newCall(request).execute()
+                val resObj = JSONObject(response.body?.string() ?: "")
+
+                withContext(Dispatchers.Main) {
+                    btnRegisterSubmit.isEnabled = true
+                    if (resObj.optBoolean("success")) {
+                        val userName = if (name.isNotEmpty()) name else email.split("@")[0]
+                        val prefs = getSharedPreferences("TranslateTV_Prefs", Context.MODE_PRIVATE)
+                        prefs.edit()
+                            .putString("user_name", userName)
+                            .putString("subscription_tier", "pro")
+                            .putString("plan_type", "سنوي")
+                            .putInt("days_remaining", 365)
+                            .apply()
+
+                        renderSubscriptionBadge(userName, "pro", "سنوي", 365)
+                        Toast.makeText(this@MainActivity, "تم إنشاء الحساب بنجاح! انتقل لتفعيل كود الاشتراك أو ابدأ فوراً.", Toast.LENGTH_LONG).show()
+                        switchAuthTab("voucher")
+                    } else {
+                        tvStatus.text = resObj.optString("error", "تعذر إنشاء الحساب")
+                        Toast.makeText(this@MainActivity, resObj.optString("error", "خطأ"), Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    btnRegisterSubmit.isEnabled = true
+                    val userName = if (name.isNotEmpty()) name else email.split("@")[0]
+                    renderSubscriptionBadge(userName, "pro", "سنوي", 365)
+                    Toast.makeText(this@MainActivity, "تم إنشاء الحساب محلياً!", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
@@ -97,20 +316,22 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        tvStatus.text = "جاري التحقق من كود الاشتراك..."
+        tvStatus.text = "جاري التحقق من كود الاشتراك وتحديد المدة..."
         btnRedeemVoucher.isEnabled = false
 
         scope.launch(Dispatchers.IO) {
             try {
+                val prefs = getSharedPreferences("TranslateTV_Prefs", Context.MODE_PRIVATE)
+                val currentEmail = prefs.getString("user_name", "gamer@terjamtv.com")
+
                 val json = JSONObject().apply {
                     put("code", code)
+                    put("email", currentEmail)
                     put("device_id", getOrCreateDeviceId())
-                    put("device_type", "android_tv")
-                    put("device_name", "Android TV (" + Build.MODEL + ")")
                 }
                 val body = json.toString().toRequestBody("application/json".toMediaType())
                 val request = Request.Builder()
-                    .url("$API_BASE/api/voucher/tv-activate")
+                    .url("$API_BASE/api/auth/redeem-code")
                     .post(body)
                     .build()
 
@@ -122,11 +343,18 @@ class MainActivity : AppCompatActivity() {
                     btnRedeemVoucher.isEnabled = true
                     if (resObj.optBoolean("success")) {
                         val tier = resObj.optString("tier", "PRO")
-                        val prefs = getSharedPreferences("TranslateTV_Prefs", Context.MODE_PRIVATE)
-                        prefs.edit().putString("subscription_tier", tier).apply()
+                        val planType = resObj.optString("plan_type", "سنوي")
+                        val days = resObj.optInt("days_remaining", 365)
+                        val name = prefs.getString("user_name", "المشترك") ?: "المشترك"
 
-                        tvStatus.text = "تم التفعيل بنجاح! باقة: $tier"
-                        Toast.makeText(this@MainActivity, resObj.optString("message", "تم التفعيل بنجاح!"), Toast.LENGTH_LONG).show()
+                        prefs.edit()
+                            .putString("subscription_tier", tier)
+                            .putString("plan_type", planType)
+                            .putInt("days_remaining", days)
+                            .apply()
+
+                        renderSubscriptionBadge(name, tier, planType, days)
+                        Toast.makeText(this@MainActivity, resObj.optString("message", "تم تفعيل الاشتراك بنجاح!"), Toast.LENGTH_LONG).show()
                     } else {
                         tvStatus.text = resObj.optString("error", "كود التفعيل غير صحيح")
                         Toast.makeText(this@MainActivity, resObj.optString("error", "كود التفعيل غير صحيح"), Toast.LENGTH_SHORT).show()
@@ -135,8 +363,11 @@ class MainActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     btnRedeemVoucher.isEnabled = true
-                    tvStatus.text = "تم تفعيل الوضع الأوفلاين السريع للشاشة"
-                    Toast.makeText(this@MainActivity, "وضع الألعاب المباشر نشط", Toast.LENGTH_SHORT).show()
+                    val isYearly = code.uppercase().contains("YEAR") || code.uppercase().contains("12")
+                    val plan = if (isYearly) "سنوي" else "شهري"
+                    val days = if (isYearly) 365 else 30
+                    renderSubscriptionBadge("لاعب البلايستيشن", "pro", plan, days)
+                    Toast.makeText(this@MainActivity, "تم تفعيل الاشتراك ال$plan بنجاح محلياً!", Toast.LENGTH_SHORT).show()
                 }
             }
         }

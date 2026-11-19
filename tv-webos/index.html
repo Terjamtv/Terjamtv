@@ -34,40 +34,78 @@
           </div>
         </div>
 
-        <!-- TV Auth / Voucher Card -->
+        <!-- TV Auth / Voucher / Subscription Card -->
         <div class="tv-auth-card">
-          <div class="auth-tabs">
-            <button id="tabVoucher" class="auth-tab-btn active" onclick="switchAuthTab('voucher')">🎟️ كود التفعيل / الاشتراك</button>
-            <button id="tabAccount" class="auth-tab-btn" onclick="switchAuthTab('account')">👤 الدخول بالحساب</button>
+          <!-- Active Subscription Banner (shown when user is logged in / activated) -->
+          <div id="subscriptionBadgeCard" class="sub-badge-card" style="display: none;">
+            <div class="sub-badge-header">
+              <span class="user-greeting" id="userGreetingText">👤 مرحباً، لاعب البلايستيشن</span>
+              <span id="planBadgeType" class="plan-badge yearly">🌟 اشتراك سنوي (12 شهر)</span>
+            </div>
+            <div class="sub-badge-details">
+              <div class="sub-detail-item">
+                <span class="label">الباقة:</span>
+                <span id="planTierName" class="value">PRO Ultra Gaming</span>
+              </div>
+              <div class="sub-detail-item">
+                <span class="label">مدة الاشتراك:</span>
+                <span id="planDurationText" class="value text-gold">12 شهر (سنوي)</span>
+              </div>
+              <div class="sub-detail-item">
+                <span class="label">الصلاحية المتبقية:</span>
+                <span id="planDaysRemaining" class="value text-cyan">365 يوماً متبقية</span>
+              </div>
+            </div>
           </div>
 
-          <!-- Tab 1: Voucher Activation -->
-          <div id="voucherSection" class="auth-body">
-            <label class="auth-label">أدخل كود الاشتراك السريع (Voucher Code):</label>
+          <!-- Auth Navigation Tabs -->
+          <div class="auth-tabs" id="authTabsContainer">
+            <button id="tabLogin" class="auth-tab-btn active" onclick="switchAuthTab('login')">🔑 تسجيل الدخول</button>
+            <button id="tabRegister" class="auth-tab-btn" onclick="switchAuthTab('register')">✨ إنشاء حساب</button>
+            <button id="tabVoucher" class="auth-tab-btn" onclick="switchAuthTab('voucher')">🎟️ كود الاشتراك</button>
+          </div>
+
+          <!-- Tab 1: Login Form -->
+          <div id="loginSection" class="auth-body">
+            <label class="auth-label">البريد الإلكتروني:</label>
+            <input type="email" id="loginEmailInput" class="tv-input" placeholder="user@example.com" />
+            <label class="auth-label" style="margin-top: 10px;">كلمة المرور:</label>
+            <input type="password" id="loginPasswordInput" class="tv-input" placeholder="••••••••" />
+            <button id="btnLoginAccount" class="tv-action-btn" style="margin-top: 14px; width: 100%;" onclick="loginAccountFromTv()">تسجيل الدخول</button>
+          </div>
+
+          <!-- Tab 2: Register Form -->
+          <div id="registerSection" class="auth-body" style="display: none;">
+            <label class="auth-label">اسم المستخدم / اللاعب:</label>
+            <input type="text" id="regNameInput" class="tv-input" placeholder="مثال: خالد العتيبي" />
+            <label class="auth-label" style="margin-top: 8px;">البريد الإلكتروني:</label>
+            <input type="email" id="regEmailInput" class="tv-input" placeholder="user@example.com" />
+            <label class="auth-label" style="margin-top: 8px;">كلمة المرور (6 خانات فأكثر):</label>
+            <input type="password" id="regPasswordInput" class="tv-input" placeholder="••••••••" />
+            <button id="btnRegisterAccount" class="tv-action-btn" style="margin-top: 12px; width: 100%; background: #2563eb;" onclick="registerAccountFromTv()">إنشاء حساب جديد</button>
+          </div>
+
+          <!-- Tab 3: Voucher Code Activation -->
+          <div id="voucherSection" class="auth-body" style="display: none;">
+            <label class="auth-label">أدخل كود الاشتراك (شهري / سنوي):</label>
             <div class="input-row">
-              <input type="text" id="voucherInput" class="tv-input" placeholder="مثال: TRTV-PRO-1M-XXXXXX" maxlength="30" />
+              <input type="text" id="voucherInput" class="tv-input" placeholder="مثال: TRTV-PRO-12M-XXXX" maxlength="30" />
               <button id="btnRedeemVoucher" class="tv-action-btn" onclick="redeemVoucherFromTv()">تفعيل الكود</button>
             </div>
-            <p class="auth-tip">💡 اكتب الكود باستخدام ريموت التلفاز أو اضغط زر البدء الفوري للمتابعة.</p>
-          </div>
-
-          <!-- Tab 2: Account Login -->
-          <div id="accountSection" class="auth-body" style="display: none;">
-            <label class="auth-label">البريد الإلكتروني:</label>
-            <input type="email" id="emailInput" class="tv-input" placeholder="user@example.com" />
-            <label class="auth-label" style="margin-top: 10px;">كلمة المرور:</label>
-            <input type="password" id="passwordInput" class="tv-input" placeholder="••••••••" />
-            <button id="btnLoginAccount" class="tv-action-btn" style="margin-top: 14px; width: 100%;" onclick="loginAccountFromTv()">تسجيل الدخول</button>
+            <p class="auth-tip">💡 يتم تحديد مدة الاشتراك تلقائياً (شهري 1M أو سنوي 12M) بمجرد كتابة الكود.</p>
           </div>
 
           <div class="status-indicator" style="margin-top: 16px;">
             <span class="dot live"></span>
-            <span id="pairingStatusText">النظام جاهز ومحمي بنسبة 100% للشاشة</span>
+            <span id="pairingStatusText">جاهز لتسجيل الدخول والترجمة الفورية</span>
           </div>
 
           <div style="margin-top: 12px; display: flex; gap: 10px; justify-content: center;">
             <button class="nav-btn" style="background: #0284c7; font-size: 15px; font-weight: 700; padding: 10px 20px; border-radius: 10px;" onclick="switchToPlayerMode()">
-              🎬 تشغيل مشغل الفيديو التجريبي
+              🎬 مشغل الفيديو التجريبي
+            </button>
+            <button id="btnLogoutBtn" class="nav-btn" style="background: #ef4444; font-size: 14px; font-weight: 700; padding: 10px 18px; border-radius: 10px; display: none;" onclick="logoutTvAccount()">
+              خروج
             </button>
           </div>
         </div>
