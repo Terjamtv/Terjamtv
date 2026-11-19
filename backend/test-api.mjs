@@ -197,6 +197,55 @@ async function runTests() {
     if (!data.success) throw new Error("Voucher redeem failed");
   });
 
+  // 13. Auth: Register Account on TV
+  const testEmail = `gamer-${Date.now()}@terjamtv.com`;
+  await test("POST /api/auth/register (Create Account on TV)", async () => {
+    const res = await fetch(`${API_BASE}/api/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "لاعب الرياض",
+        email: testEmail,
+        password: "password123"
+      })
+    });
+    if (!res.ok) throw new Error(`Status ${res.status}`);
+    const data = await res.json();
+    if (!data.success) throw new Error("Register failed");
+  });
+
+  // 14. Auth: Login Account on TV
+  await test("POST /api/auth/login (Sign In on TV)", async () => {
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: testEmail,
+        password: "password123"
+      })
+    });
+    if (!res.ok) throw new Error(`Status ${res.status}`);
+    const data = await res.json();
+    if (!data.success) throw new Error("Login failed");
+  });
+
+  // 15. Auth: Redeem Yearly Voucher & Verify Badge Calculation
+  await test("POST /api/auth/redeem-code (Yearly Voucher & Badge)", async () => {
+    const res = await fetch(`${API_BASE}/api/auth/redeem-code`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        code: "TRTV-PRO-12M-TEST",
+        email: testEmail
+      })
+    });
+    if (!res.ok) throw new Error(`Status ${res.status}`);
+    const data = await res.json();
+    if (!data.success) throw new Error("Redeem code failed");
+    if (data.plan_type !== "سنوي") throw new Error(`Expected 'سنوي', got ${data.plan_type}`);
+    if (data.duration_months !== 12) throw new Error(`Expected 12 months, got ${data.duration_months}`);
+  });
+
   console.log(`\n================================`);
   console.log(`🏁 Test Summary: ${passed} Passed, ${failed} Failed`);
   console.log(`================================\n`);

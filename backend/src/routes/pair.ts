@@ -258,16 +258,24 @@ pairRoute.get("/status", async (c) => {
     }
   }
 
-  if (dev && dev.is_active) {
-    return c.json({
-      status: "paired",
-      paired: true,
-      device_id: dev.id,
-      device_name: dev.device_name,
-      user_id: dev.user_id,
-      user_name: dev.user_name || "مشترك TranslateTV",
-      tier: dev.tier || "pro"
-    });
+  if (dev) {
+    if (dev.is_active) {
+      return c.json({
+        status: "paired",
+        paired: true,
+        device_id: dev.id,
+        device_name: dev.device_name,
+        user_id: dev.user_id,
+        user_name: dev.user_name || "مشترك TranslateTV",
+        tier: dev.tier || "pro"
+      });
+    } else {
+      return c.json({
+        status: "pending",
+        paired: false,
+        pairing_code: dev.pairing_code
+      });
+    }
   }
 
   // Check shared Supabase pair record
