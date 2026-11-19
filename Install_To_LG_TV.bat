@@ -31,12 +31,20 @@ echo [3/4] جاري رفع وتثبيت تطبيق الترجمة com.translatet
 call ares-install --device lgtv com.translatetv.app_1.0.0_all.ipk
 
 echo.
-echo [4/4] هل ترغب في تثبيت أداة التقاط HDMI المباشر (PicCap) لشاشات LG؟
+echo [4/5] هل ترغب في تثبيت أداة التقاط HDMI المباشر (PicCap) لشاشات LG؟
 echo اضغط Y للتثبيت أو أي زر آخر للمتابعة:
 set /p INSTALL_PICCAP="[Y/N]: "
 if /i "%INSTALL_PICCAP%"=="Y" (
     echo جاري تثبيت PicCap على شاشة LG...
     call ares-install --device lgtv tools\org.webosbrew.piccap_0.5.3_all.ipk
+)
+
+echo.
+echo [5/5] هل ترغب في تثبيت متجر Homebrew Channel (لتشغيل التطبيقات بشكل دائم وتفادي مهلة الـ 50 ساعة)؟
+set /p INSTALL_HB="[Y/N]: "
+if /i "%INSTALL_HB%"=="Y" (
+    echo جاري تثبيت Homebrew Channel على شاشة LG...
+    call ares-install --device lgtv tools\org.webosbrew.hbchannel_0.7.3_all.ipk
 )
 
 echo.
