@@ -248,10 +248,18 @@ LocalTM.init();
 
 let subtitleClearTimeout = null;
 
+let oledShiftPx = 0;
+
 function displaySubtitle(original, translated) {
   // Store into local offline memory dictionary
   if (original && translated) {
     LocalTM.set(original, translated);
+  }
+
+  // OLED Screen Protection: 2px micro-shift to prevent pixel burn-in
+  oledShiftPx = (oledShiftPx + 2) % 6;
+  if (!isPositionTop) {
+    subtitleOverlay.style.bottom = `${58 + oledShiftPx}px`;
   }
 
   originalTextEl.textContent = original;

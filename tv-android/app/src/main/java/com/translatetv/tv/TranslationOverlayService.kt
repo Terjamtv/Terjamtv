@@ -112,12 +112,24 @@ class TranslationOverlayService : Service() {
         windowManager.addView(overlayView, params)
     }
 
+    private var pixelShiftOffset = 0
+
     fun updateText(original: String, translated: String) {
         if (original.isBlank() && translated.isBlank()) return
 
         tvOriginal.text = original
         tvTranslated.text = translated
         overlayView?.visibility = View.VISIBLE
+
+        // OLED Burn-in Protection: 2px micro-shift on each dialogue update
+        try {
+            pixelShiftOffset = (pixelShiftOffset + 2) % 6
+            val params = overlayView?.layoutParams as? WindowManager.LayoutParams
+            if (params != null) {
+                params.y = 70 + pixelShiftOffset
+                windowManager.updateViewLayout(overlayView, params)
+            }
+        } catch (ignored: Exception) {}
 
         // Auto-fade / Auto-hide subtitle after 4.5s if dialogue ends (Rockstar / GTA style)
         hideRunnable?.let { mainHandler.removeCallbacks(it) }
