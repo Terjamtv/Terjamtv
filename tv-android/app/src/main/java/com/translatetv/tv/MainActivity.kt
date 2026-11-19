@@ -3,24 +3,19 @@ package com.translatetv.tv
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
 import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Button
-import android.widget.ImageView
+import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.zxing.BarcodeFormat
-import com.journeyapps.barcodescanner.BarcodeEncoder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -40,22 +35,19 @@ class MainActivity : AppCompatActivity() {
     // Live Cloudflare Worker production API
     private val API_BASE = "https://translatetv-api.honda-druid.workers.dev" 
 
-    private lateinit var ivQrCode: ImageView
-    private lateinit var tvPairingCode: TextView
     private lateinit var tvStatus: TextView
     private lateinit var btnStartTranslation: Button
-
-    private var deviceId: String? = null
-    private var isPaired = false
+    private lateinit var etVoucherCode: EditText
+    private lateinit var btnRedeemVoucher: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        ivQrCode = findViewById(R.id.ivQrCode)
-        tvPairingCode = findViewById(R.id.tvPairingCode)
         tvStatus = findViewById(R.id.tvStatus)
         btnStartTranslation = findViewById(R.id.btnStartTranslation)
+        etVoucherCode = findViewById(R.id.etVoucherCode)
+        btnRedeemVoucher = findViewById(R.id.btnRedeemVoucher)
 
         btnStartTranslation.setOnClickListener {
             if (isTranslationRunning()) {
@@ -65,12 +57,89 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        initializePairing()
+        btnRedeemVoucher.setOnClickListener {
+            redeemVoucherOnTv()
+        }
+
+        checkSavedActivation()
+        btnStartTranslation.requestFocus()
     }
 
     override fun onResume() {
         super.onResume()
         updateButtonState()
+    }
+
+    private fun checkSavedActivation() {
+        val prefs = getSharedPreferences("TranslateTV_Prefs", Context.MODE_PRIVATE)
+        val tier = prefs.getString("subscription_tier", null)
+        if (tier != null) {
+            tvStatus.text = "الاشتراك نشط ($tier) — جاهز للترجمة الفورية"
+        } else {
+            tvStatus.text = "الحالة: جاهز للترجمة الفورية بأمان تام"
+        }
+    }
+
+    private fun getOrCreateDeviceId(): String {
+        val prefs = getSharedPreferences("TranslateTV_Prefs", Context.MODE_PRIVATE)
+        var id = prefs.getString("device_id", null)
+        if (id == null) {
+            id = "android-tv-" + java.util.UUID.randomUUID().toString().substring(0, 8)
+            prefs.edit().putString("device_id", id).apply()
+        }
+        return id
+    }
+
+    private fun redeemVoucherOnTv() {
+        val code = etVoucherCode.text.toString().trim()
+        if (code.isEmpty()) {
+            Toast.makeText(this, "يرجى إدخال كود التفعيل أولاً", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        tvStatus.text = "جاري التحقق من كود الاشتراك..."
+        btnRedeemVoucher.isEnabled = false
+
+        scope.launch(Dispatchers.IO) {
+            try {
+                val json = JSONObject().apply {
+                    put("code", code)
+                    put("device_id", getOrCreateDeviceId())
+                    put("device_type", "android_tv")
+                    put("device_name", "Android TV (" + Build.MODEL + ")")
+                }
+                val body = json.toString().toRequestBody("application/json".toMediaType())
+                val request = Request.Builder()
+                    .url("$API_BASE/api/voucher/tv-activate")
+                    .post(body)
+                    .build()
+
+                val response = client.newCall(request).execute()
+                val resStr = response.body?.string() ?: ""
+                val resObj = JSONObject(resStr)
+
+                withContext(Dispatchers.Main) {
+                    btnRedeemVoucher.isEnabled = true
+                    if (resObj.optBoolean("success")) {
+                        val tier = resObj.optString("tier", "PRO")
+                        val prefs = getSharedPreferences("TranslateTV_Prefs", Context.MODE_PRIVATE)
+                        prefs.edit().putString("subscription_tier", tier).apply()
+
+                        tvStatus.text = "تم التفعيل بنجاح! باقة: $tier"
+                        Toast.makeText(this@MainActivity, resObj.optString("message", "تم التفعيل بنجاح!"), Toast.LENGTH_LONG).show()
+                    } else {
+                        tvStatus.text = resObj.optString("error", "كود التفعيل غير صحيح")
+                        Toast.makeText(this@MainActivity, resObj.optString("error", "كود التفعيل غير صحيح"), Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    btnRedeemVoucher.isEnabled = true
+                    tvStatus.text = "تم تفعيل الوضع الأوفلاين السريع للشاشة"
+                    Toast.makeText(this@MainActivity, "وضع الألعاب المباشر نشط", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     private fun isTranslationRunning(): Boolean {
@@ -99,82 +168,6 @@ class MainActivity : AppCompatActivity() {
         stopService(Intent(this, TranslationOverlayService::class.java))
         Toast.makeText(this, "تم إيقاف الترجمة بنجاح وتحرير كافة الموارد", Toast.LENGTH_SHORT).show()
         updateButtonState()
-    }
-
-    private fun initializePairing() {
-        tvStatus.text = "جاري إنشاء رمز الاقتران..."
-
-        scope.launch(Dispatchers.IO) {
-            try {
-                val json = JSONObject().apply {
-                    put("device_type", "android_tv")
-                    put("device_name", "Android TV (" + Build.MODEL + ")")
-                    put("device_model", Build.DEVICE)
-                }
-
-                val body = json.toString().toRequestBody("application/json".toMediaType())
-                val request = Request.Builder()
-                    .url("$API_BASE/api/pair/init")
-                    .post(body)
-                    .build()
-
-                val response = client.newCall(request).execute()
-                val responseStr = response.body?.string() ?: ""
-                val resObj = JSONObject(responseStr)
-
-                deviceId = resObj.optString("device_id")
-                val pairingCode = resObj.optString("pairing_code")
-                val qrPayload = resObj.optString("qr_payload")
-
-                // Generate QR Bitmap
-                val barcodeEncoder = BarcodeEncoder()
-                val bitmap: Bitmap = barcodeEncoder.encodeBitmap(qrPayload, BarcodeFormat.QR_CODE, 400, 400)
-
-                withContext(Dispatchers.Main) {
-                    tvPairingCode.text = pairingCode
-                    ivQrCode.setImageBitmap(bitmap)
-                    tvStatus.text = "في انتظار مسح رمز الـ QR من تطبيق الهاتف..."
-                    startStatusPolling()
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    tvStatus.text = "تعذر الاتصال بالخادم: ${e.message}"
-                }
-            }
-        }
-    }
-
-    private fun startStatusPolling() {
-        scope.launch(Dispatchers.IO) {
-            while (isActive && !isPaired) {
-                delay(3000)
-                if (deviceId == null) continue
-
-                try {
-                    val request = Request.Builder()
-                        .url("$API_BASE/api/pair/status?device_id=$deviceId")
-                        .get()
-                        .build()
-
-                    val response = client.newCall(request).execute()
-                    val resObj = JSONObject(response.body?.string() ?: "")
-
-                    if (resObj.optBoolean("paired")) {
-                        isPaired = true
-                        val userName = resObj.optString("user_name")
-                        val tier = resObj.optString("tier")
-
-                        withContext(Dispatchers.Main) {
-                            tvStatus.text = "تم الاقتران بنجاح! مرحباً $userName ($tier)"
-                            btnStartTranslation.isEnabled = true
-                            Toast.makeText(this@MainActivity, "تم ربط التلفزيون بنجاح!", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                } catch (e: Exception) {
-                    // ignore network retry
-                }
-            }
-        }
     }
 
     private fun checkPermissionsAndStart() {

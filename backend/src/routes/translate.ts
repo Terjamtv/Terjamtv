@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { Env, createUserClient, createAdminClient } from "../lib/supabase";
+import { toSaudiDialect } from "../lib/saudi";
 
 export const translateRoute = new Hono<{ Bindings: Env }>();
 

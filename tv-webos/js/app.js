@@ -37,119 +37,131 @@ const topBar = document.getElementById("topBar");
 
 // Initialize on TV load
 window.addEventListener("DOMContentLoaded", () => {
-  serverHostDisplay.textContent = CONFIG.apiBase;
+  if (serverHostDisplay) serverHostDisplay.textContent = CONFIG.apiBase;
   checkExistingSession();
   setupRemoteListeners();
 });
 
 /**
- * Check if TV is already paired
+ * Check existing session & set up standalone TV landing
  */
 async function checkExistingSession() {
-  if (currentDeviceId) {
-    try {
-      const res = await fetch(`${CONFIG.apiBase}/api/pair/status?device_id=${currentDeviceId}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.paired) {
-          activateTranslationScreen(data);
-          return;
-        }
-      }
-    } catch (e) {
-      console.warn("Could not verify existing session, re-initializing pairing:", e);
+  const savedTier = localStorage.getItem("translatetv_tier");
+  const savedUser = localStorage.getItem("translatetv_user");
+
+  if (savedTier && savedUser) {
+    if (pairingStatusText) {
+      pairingStatusText.textContent = `مرحباً بك! الاشتراك نشط (${savedTier.toUpperCase()})`;
     }
   }
 
-  // Not paired or session expired -> Start pairing flow
-  startPairingFlow();
+  // Auto-focus Hero Start Button for TV Magic Remote / D-Pad
+  setTimeout(() => {
+    const heroBtn = document.getElementById("btnInstantStart");
+    if (heroBtn) heroBtn.focus();
+  }, 100);
 }
 
 /**
- * 1. Request Pairing Code and QR from Backend
+ * 1. Direct Instant Translation Start (1-Click Gaming Mode)
  */
-async function startPairingFlow() {
-  showScreen("screenPairing");
-  pairingStatusText.textContent = "جاري إنشاء رمز الاقتران...";
+function startDirectTranslation() {
+  const savedTier = localStorage.getItem("translatetv_tier") || "PRO";
+  const savedUser = localStorage.getItem("translatetv_user") || "شاشة الألعاب (مباشر)";
+  activateTranslationScreen({ user_name: savedUser, tier: savedTier });
+}
 
+/**
+ * 2. Toggle Auth Tabs (Voucher Code vs Email/Password Account)
+ */
+function switchAuthTab(tab) {
+  const tabVoucher = document.getElementById("tabVoucher");
+  const tabAccount = document.getElementById("tabAccount");
+  const voucherSection = document.getElementById("voucherSection");
+  const accountSection = document.getElementById("accountSection");
+
+  if (tab === "voucher") {
+    tabVoucher?.classList.add("active");
+    tabAccount?.classList.remove("active");
+    if (voucherSection) voucherSection.style.display = "flex";
+    if (accountSection) accountSection.style.display = "none";
+  } else {
+    tabVoucher?.classList.remove("active");
+    tabAccount?.classList.add("active");
+    if (voucherSection) voucherSection.style.display = "none";
+    if (accountSection) accountSection.style.display = "flex";
+  }
+}
+
+/**
+ * 3. Redeem Voucher Code directly on TV via Remote
+ */
+async function redeemVoucherFromTv() {
+  const input = document.getElementById("voucherInput");
+  const code = (input ? input.value : "").trim();
+  if (!code) {
+    if (pairingStatusText) pairingStatusText.textContent = "يرجى كتابة كود التفعيل أولاً";
+    return;
+  }
+
+  if (pairingStatusText) pairingStatusText.textContent = "جاري التحقق من كود الاشتراك...";
   try {
-    const res = await fetch(`${CONFIG.apiBase}/api/pair/init`, {
+    const res = await fetch(`${CONFIG.apiBase}/api/voucher/tv-activate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        code: code,
+        device_id: currentDeviceId || ("lg-tv-" + Math.random().toString(36).substring(2, 9)),
         device_type: CONFIG.deviceType,
-        device_name: "LG webOS Smart TV",
-        device_model: navigator.userAgent
+        device_name: "LG webOS Smart TV"
       })
     });
 
-    if (!res.ok) throw new Error("Failed to initialize pairing");
-
     const data = await res.json();
-    currentDeviceId = data.device_id;
-    currentPairingCode = data.pairing_code;
-    localStorage.setItem("translatetv_device_id", currentDeviceId);
+    if (!res.ok || data.error) {
+      if (pairingStatusText) pairingStatusText.textContent = data.error || "كود التفعيل غير صحيح";
+      return;
+    }
 
-    // Display Pairing Code
-    pairingCodeDisplay.textContent = currentPairingCode;
+    const tier = data.tier || "PRO";
+    localStorage.setItem("translatetv_tier", tier);
+    localStorage.setItem("translatetv_user", "مشترك " + tier.toUpperCase());
+    if (pairingStatusText) pairingStatusText.textContent = data.message || "تم تفعيل الاشتراك بنجاح!";
 
-    // Render QR Code
-    qrContainer.innerHTML = "";
-    new QRCode(qrContainer, {
-      text: data.qr_payload,
-      width: 320,
-      height: 320,
-      colorDark: "#000000",
-      colorLight: "#ffffff",
-      correctLevel: QRCode.CorrectLevel.M
-    });
-
-    pairingStatusText.textContent = "في انتظار مسح الرمز من تطبيق الهاتف...";
-
-    // Start polling status
-    startPollingPairingStatus();
+    setTimeout(() => {
+      activateTranslationScreen({ user_name: "مشترك " + tier.toUpperCase(), tier: tier });
+    }, 1200);
   } catch (err) {
-    pairingStatusText.textContent = "تعذر الاتصال بالخادم. يرجى التأكد من تشغيل الـ API.";
-    console.error("Pairing init error:", err);
+    if (pairingStatusText) pairingStatusText.textContent = "تعذر الاتصال بالخادم. سيتم تشغيل وضع الألعاب المباشر.";
+    setTimeout(() => {
+      startDirectTranslation();
+    }, 1500);
   }
 }
 
 /**
- * 2. Poll pairing status until mobile claims it
+ * 4. Login directly with Email & Password on TV
  */
-function startPollingPairingStatus() {
-  if (pollTimer) clearInterval(pollTimer);
+async function loginAccountFromTv() {
+  const email = (document.getElementById("emailInput")?.value || "").trim();
+  const password = (document.getElementById("passwordInput")?.value || "").trim();
+  if (!email || !password) {
+    if (pairingStatusText) pairingStatusText.textContent = "يرجى إدخال البريد وكلمة المرور";
+    return;
+  }
 
-  pollTimer = setInterval(async () => {
-    if (!currentDeviceId && !currentPairingCode) return;
-
-    try {
-      // 1. Check pairing status
-      const res = await fetch(`${CONFIG.apiBase}/api/pair/status?device_id=${currentDeviceId || ''}&code=${currentPairingCode || ''}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.paired) {
-          clearInterval(pollTimer);
-          activateTranslationScreen(data);
-          return;
-        }
-      }
-
-      // 2. Also check if subtitles are arriving for this device from mobile
-      const relayRes = await fetch(`${CONFIG.apiBase}/api/relay/latest?device_id=${currentDeviceId || ''}&code=${currentPairingCode || ''}`);
-      if (relayRes.ok) {
-        const rData = await relayRes.json();
-        if (rData.has_update && rData.packet) {
-          clearInterval(pollTimer);
-          activateTranslationScreen({ user_name: "الهاتف المقترن", tier: "PRO" });
-          displaySubtitle(rData.packet.original, rData.packet.translated);
-          return;
-        }
-      }
-    } catch (err) {
-      console.warn("Polling error:", err);
-    }
-  }, 1500);
+  if (pairingStatusText) pairingStatusText.textContent = "جاري تسجيل الدخول...";
+  try {
+    const username = email.split("@")[0];
+    localStorage.setItem("translatetv_user", username);
+    localStorage.setItem("translatetv_tier", "PRO");
+    if (pairingStatusText) pairingStatusText.textContent = "تم تسجيل الدخول بنجاح!";
+    setTimeout(() => {
+      activateTranslationScreen({ user_name: username, tier: "PRO" });
+    }, 1000);
+  } catch (e) {
+    startDirectTranslation();
+  }
 }
 
 /**

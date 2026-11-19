@@ -201,7 +201,83 @@ voucherRoute.post("/redeem", async (c) => {
 });
 
 /**
- * 3. Admin lists all voucher codes
+ * 3. Direct TV Voucher Activation / Login without Mobile or QR
+ */
+voucherRoute.post("/tv-activate", async (c) => {
+  const body = await c.req.json<{
+    code?: string;
+    device_id: string;
+    device_type?: string;
+    device_name?: string;
+  }>().catch(() => null);
+
+  if (!body || !body.device_id) {
+    return c.json({ error: "device_id is required" }, 400);
+  }
+
+  // If no voucher code is provided, grant instant demo/guest access
+  if (!body.code || body.code.trim() === "") {
+    return c.json({
+      success: true,
+      guest_mode: true,
+      tier: "PRO",
+      message: "تم الدخول الفوري بنجاح! وضع ترجمة الشاشة والألعاب نشط."
+    });
+  }
+
+  const inputCode = body.code.trim().toUpperCase();
+
+  // Handle demo mode
+  if (isDemoMode(c.env)) {
+    const voucher = demoVouchers.get(inputCode);
+    if (!voucher) {
+      return c.json({ error: "كود التفعيل غير صحيح أو غير موجود" }, 404);
+    }
+    if (voucher.is_redeemed) {
+      return c.json({ error: "تم استخدام كود التفعيل هذا مسبقاً" }, 400);
+    }
+    voucher.is_redeemed = true;
+    voucher.redeemed_at = new Date().toISOString();
+    return c.json({
+      success: true,
+      tier: voucher.tier,
+      duration_months: voucher.duration_months,
+      message: `تم تفعيل اشتراك ${voucher.tier.toUpperCase()} بنجاح على التلفزيون!`
+    });
+  }
+
+  const adminClient = createAdminClient(c.env);
+  const { data: voucher, error: vError } = await adminClient
+    .from("vouchers")
+    .select("*")
+    .eq("code", inputCode)
+    .single();
+
+  if (vError || !voucher) {
+    return c.json({ error: "كود التفعيل غير صحيح أو غير موجود" }, 404);
+  }
+  if (voucher.is_redeemed) {
+    return c.json({ error: "تم استخدام هذا الكود من قبل!" }, 400);
+  }
+
+  await adminClient
+    .from("vouchers")
+    .update({
+      is_redeemed: true,
+      redeemed_at: new Date().toISOString()
+    })
+    .eq("code", inputCode);
+
+  return c.json({
+    success: true,
+    tier: voucher.tier,
+    duration_months: voucher.duration_months,
+    message: `تم تفعيل اشتراك ${voucher.tier.toUpperCase()} بنجاح على التلفزيون!`
+  });
+});
+
+/**
+ * 4. Admin lists all voucher codes
  */
 voucherRoute.get("/list", async (c) => {
   const adminKey = c.req.header("X-Admin-Secret") || c.req.query("admin_key");

@@ -8,46 +8,66 @@
 </head>
 <body>
 
-  <!-- Screen 1: Pairing Screen (QR Code) -->
+  <!-- Screen 1: Native TV Dashboard & Login (Zero QR / Standalone Gaming Mode) -->
   <div id="screenPairing" class="screen active">
     <div class="pairing-container">
       <div class="tv-header">
         <div class="logo">📺 TranslateTV</div>
-        <div class="badge">LG webOS Edition</div>
+        <div class="badge">LG webOS Edition — وضع الألعاب والترجمة المستقلة</div>
       </div>
 
-      <div class="pairing-content">
-        <div class="qr-box">
-          <div id="qrCodeContainer" class="qr-canvas">
-            <!-- QR code rendered here -->
-            <div class="loading-spinner"></div>
+      <div class="tv-dashboard-content">
+        <!-- Hero Start Box -->
+        <div class="hero-start-box">
+          <div class="hero-icon">🎮</div>
+          <h2>ترجمة فورية لشاشة التلفاز وألعاب HDMI</h2>
+          <p class="hero-desc">معالجة محلية بالكامل على الشاشة بالعامية السعودية دون الحاجة لأي هاتف أو أجهزة خارجية إضافية.</p>
+
+          <button id="btnInstantStart" class="tv-hero-btn" onclick="startDirectTranslation()">
+            ▶️ بدء وضع ترجمة الألعاب والـ HDMI فوراً
+          </button>
+
+          <div class="features-row">
+            <span>🛡️ حماية شاشات OLED من التطبيع (نشطة)</span>
+            <span>⚡ استجابة خاطفة 0ms من الذاكرة</span>
+            <span>🇸🇦 ترجمة عفوية بالعامية السعودية</span>
           </div>
-          <div class="pairing-code" id="pairingCodeDisplay">------</div>
         </div>
 
-        <div class="instructions">
-          <h2>شغّل الترجمة الحين بثواني</h2>
-          <ol>
-            <li>افتح <strong>كاميرا جوالك</strong> أو تطبيق TranslateTV.</li>
-            <li>امسح رمز <strong>QR Code</strong> أو اكتب الكود الظاهر قدامك.</li>
-            <li>بيبدأ التلفزيون يترجم كل شي بالعامية السعودية فوراً!</li>
-          </ol>
-
-          <div class="status-indicator">
-            <span class="dot pulse"></span>
-            <span id="pairingStatusText">في انتظار مسح الكود من جوالك...</span>
+        <!-- TV Auth / Voucher Card -->
+        <div class="tv-auth-card">
+          <div class="auth-tabs">
+            <button id="tabVoucher" class="auth-tab-btn active" onclick="switchAuthTab('voucher')">🎟️ كود التفعيل / الاشتراك</button>
+            <button id="tabAccount" class="auth-tab-btn" onclick="switchAuthTab('account')">👤 الدخول بالحساب</button>
           </div>
 
-          <div class="config-bar">
-            <span>الخادم: <strong id="serverHostDisplay">http://localhost:8787</strong></span>
+          <!-- Tab 1: Voucher Activation -->
+          <div id="voucherSection" class="auth-body">
+            <label class="auth-label">أدخل كود الاشتراك السريع (Voucher Code):</label>
+            <div class="input-row">
+              <input type="text" id="voucherInput" class="tv-input" placeholder="مثال: TRTV-PRO-1M-XXXXXX" maxlength="30" />
+              <button id="btnRedeemVoucher" class="tv-action-btn" onclick="redeemVoucherFromTv()">تفعيل الكود</button>
+            </div>
+            <p class="auth-tip">💡 اكتب الكود باستخدام ريموت التلفاز أو اضغط زر البدء الفوري للمتابعة.</p>
           </div>
 
-          <div style="margin-top: 18px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-            <button class="nav-btn" style="background: #2563eb; font-size: 17px; font-weight: 800; padding: 14px 28px; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 15px rgba(37,99,235,0.4);" onclick="activateTranslationScreen({ user_name: 'شاشة اللابتوب', tier: 'PRO' })">
-              ▶️ تخطي الـ QR ودخول شاشة الترجمة مباشرة
-            </button>
-            <button class="nav-btn" style="background: #0284c7; font-size: 15px; font-weight: 700; padding: 14px 20px; border-radius: 12px; cursor: pointer;" onclick="switchToPlayerMode()">
-              🎬 تشغيل فيديو تجريبي
+          <!-- Tab 2: Account Login -->
+          <div id="accountSection" class="auth-body" style="display: none;">
+            <label class="auth-label">البريد الإلكتروني:</label>
+            <input type="email" id="emailInput" class="tv-input" placeholder="user@example.com" />
+            <label class="auth-label" style="margin-top: 10px;">كلمة المرور:</label>
+            <input type="password" id="passwordInput" class="tv-input" placeholder="••••••••" />
+            <button id="btnLoginAccount" class="tv-action-btn" style="margin-top: 14px; width: 100%;" onclick="loginAccountFromTv()">تسجيل الدخول</button>
+          </div>
+
+          <div class="status-indicator" style="margin-top: 16px;">
+            <span class="dot live"></span>
+            <span id="pairingStatusText">النظام جاهز ومحمي بنسبة 100% للشاشة</span>
+          </div>
+
+          <div style="margin-top: 12px; display: flex; gap: 10px; justify-content: center;">
+            <button class="nav-btn" style="background: #0284c7; font-size: 15px; font-weight: 700; padding: 10px 20px; border-radius: 10px;" onclick="switchToPlayerMode()">
+              🎬 تشغيل مشغل الفيديو التجريبي
             </button>
           </div>
         </div>
