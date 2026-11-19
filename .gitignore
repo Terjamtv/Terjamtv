@@ -16,7 +16,10 @@ build/
 *.aab
 local.properties
 *.log
-tools/
+tools/*
+!tools/*.py
+!tools/arabic_shaper/
+!tools/arabic_shaper/*
 
 # Python
 __pycache__/

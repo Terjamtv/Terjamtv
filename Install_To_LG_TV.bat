@@ -40,11 +40,19 @@ if /i "%INSTALL_PICCAP%"=="Y" (
 )
 
 echo.
-echo [5/5] هل ترغب في تثبيت متجر Homebrew Channel (لتشغيل التطبيقات بشكل دائم وتفادي مهلة الـ 50 ساعة)؟
+echo [5/6] هل ترغب في تثبيت متجر Homebrew Channel (لتشغيل التطبيقات بشكل دائم وتفادي مهلة الـ 50 ساعة)؟
 set /p INSTALL_HB="[Y/N]: "
 if /i "%INSTALL_HB%"=="Y" (
     echo جاري تثبيت Homebrew Channel على شاشة LG...
     call ares-install --device lgtv tools\org.webosbrew.hbchannel_0.7.3_all.ipk
+)
+
+echo.
+echo [6/6] هل ترغب في تثبيت مشغل الألعاب فائق السرعة Moonlight TV على شاشة LG؟
+set /p INSTALL_MOONLIGHT="[Y/N]: "
+if /i "%INSTALL_MOONLIGHT%"=="Y" (
+    echo جاري تثبيت Moonlight TV على شاشة LG...
+    call ares-install --device lgtv tools\Moonlight\com.limelight.webos_1.6.36_arm.ipk
 )
 
 echo.
