@@ -40,6 +40,16 @@ class GameSubtitleOverlay(QWidget):
         self.last_ocr_text = ""
         self.ocr_lock = threading.Lock()
         self.translation_cache = {}
+        # Pre-seed offline game dictionary for instant 0ms hits
+        dict_path = os.path.join(os.path.dirname(__file__), "data", "game_dictionary_ar.json")
+        if os.path.exists(dict_path):
+            try:
+                with open(dict_path, "r", encoding="utf-8") as f:
+                    d = json.load(f)
+                    for k, v in d.get("entries", {}).items():
+                        self.translation_cache[k.lower().strip()] = v
+            except Exception as e:
+                pass
         
         # Communication signals for thread-safe UI updates
         self.signals = OCRSignals()

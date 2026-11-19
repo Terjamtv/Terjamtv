@@ -356,15 +356,40 @@ function toggleDialogueSimulation() {
   }
 }
 
+let currentThemeIndex = 0;
+const SUBTITLE_THEMES = [
+  { name: "GTA Yellow", color: "#FDE047" },
+  { name: "Cinema White", color: "#FFFFFF" },
+  { name: "Cyan Gamer", color: "#38BDF8" }
+];
+
+function toggleSubtitleTheme() {
+  currentThemeIndex = (currentThemeIndex + 1) % SUBTITLE_THEMES.length;
+  const theme = SUBTITLE_THEMES[currentThemeIndex];
+  translatedTextEl.style.color = theme.color;
+  showToast(`نمط الخط: ${theme.name}`);
+}
+
 function setupRemoteListeners() {
   window.addEventListener("keydown", (e) => {
     // webOS Remote keycodes
     const KEY_ENTER = 13;
     const KEY_BACK = 461; // webOS back key
-    const KEY_MENU = 18;
-    const KEY_NUM_1 = 49; // Number 1 on remote
+    const KEY_UP = 38;    // D-Pad Up
+    const KEY_DOWN = 40;  // D-Pad Down
+    const KEY_RED = 403;   // Red color button
+    const KEY_YELLOW = 405;// Yellow color button
+    const KEY_NUM_1 = 49;  // Number 1 on remote
 
-    if (e.keyCode === KEY_NUM_1) {
+    if (e.keyCode === KEY_UP) {
+      changeFontSize(2); // Increase text size
+    } else if (e.keyCode === KEY_DOWN) {
+      changeFontSize(-2); // Decrease text size
+    } else if (e.keyCode === KEY_RED) {
+      togglePosition(); // Toggle Top / Bottom
+    } else if (e.keyCode === KEY_YELLOW) {
+      toggleSubtitleTheme(); // Cycle colors
+    } else if (e.keyCode === KEY_NUM_1) {
       toggleDialogueSimulation();
     } else if (e.keyCode === KEY_ENTER) {
       // Toggle settings modal

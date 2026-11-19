@@ -58,10 +58,47 @@ class MainActivity : AppCompatActivity() {
         btnStartTranslation = findViewById(R.id.btnStartTranslation)
 
         btnStartTranslation.setOnClickListener {
-            checkPermissionsAndStart()
+            if (isTranslationRunning()) {
+                stopTranslation()
+            } else {
+                checkPermissionsAndStart()
+            }
         }
 
         initializePairing()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateButtonState()
+    }
+
+    private fun isTranslationRunning(): Boolean {
+        val manager = getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+        @Suppress("DEPRECATION")
+        for (service in manager.getRunningServices(Int.MAX_VALUE)) {
+            if (ScreenCaptureService::class.java.name == service.service.className) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun updateButtonState() {
+        if (isTranslationRunning()) {
+            btnStartTranslation.text = "🛑 إيقاف وضع ترجمة الألعاب"
+            btnStartTranslation.setBackgroundColor(android.graphics.Color.parseColor("#EF4444")) // Red
+        } else {
+            btnStartTranslation.text = "🎮 بدء وضع ترجمة البلايستيشن والألعاب"
+            btnStartTranslation.setBackgroundColor(android.graphics.Color.parseColor("#3B82F6")) // Blue
+        }
+    }
+
+    private fun stopTranslation() {
+        stopService(Intent(this, ScreenCaptureService::class.java))
+        stopService(Intent(this, TranslationOverlayService::class.java))
+        Toast.makeText(this, "تم إيقاف الترجمة بنجاح وتحرير كافة الموارد", Toast.LENGTH_SHORT).show()
+        updateButtonState()
     }
 
     private fun initializePairing() {
@@ -185,6 +222,7 @@ class MainActivity : AppCompatActivity() {
                     startService(captureIntent)
                 }
 
+                updateButtonState()
                 Toast.makeText(this, "بدأت الترجمة الفورية في الخلفية!", Toast.LENGTH_LONG).show()
                 moveTaskToBack(true) // Minimize to let user view other apps/media
             } else {
