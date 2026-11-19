@@ -27,8 +27,17 @@ echo (اكتب كود الـ Passphrase المكون من 6 حروف عندما 
 call ares-novacom --device lgtv --getkey
 
 echo.
-echo [3/3] جاري رفع وتثبيت ملف com.translatetv.app_1.0.0_all.ipk على التلفزيون...
+echo [3/4] جاري رفع وتثبيت تطبيق الترجمة com.translatetv.app_1.0.0_all.ipk...
 call ares-install --device lgtv com.translatetv.app_1.0.0_all.ipk
+
+echo.
+echo [4/4] هل ترغب في تثبيت أداة التقاط HDMI المباشر (PicCap) لشاشات LG؟
+echo اضغط Y للتثبيت أو أي زر آخر للمتابعة:
+set /p INSTALL_PICCAP="[Y/N]: "
+if /i "%INSTALL_PICCAP%"=="Y" (
+    echo جاري تثبيت PicCap على شاشة LG...
+    call ares-install --device lgtv tools\org.webosbrew.piccap_0.5.3_all.ipk
+)
 
 echo.
 echo جاري إطلاق التطبيق على التلفزيون...
